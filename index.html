@@ -344,7 +344,7 @@ function render(){
 }
 
 /* ---------- MASTER ---------- */
-function renderMaster(w, d){
+function renderMaster(w, d, ro){
   w.appendChild(el('h1', '', t('hello', {n: d.name})));
   var p = d.pay || {accepted:0, rejected_master_fault:0, rework:0, deduction:0, to_pay:0};
   var hero = el('div', 'card hero');
@@ -357,7 +357,9 @@ function renderMaster(w, d){
 
   /* submit */
   var ui = S.ui.sub || (S.ui.sub = {open:false, product:null, qty:1, note:''});
-  if (!ui.open) {
+  if (ro) {
+    var rb = btn(t('submit_big'), 'gold block'); rb.disabled = true; w.appendChild(rb);
+  } else if (!ui.open) {
     w.appendChild(btn(t('submit_big'), 'gold block', function(){ ui.open = true; render(); }));
   } else {
     var c = el('div', 'card');
@@ -395,8 +397,8 @@ function renderMaster(w, d){
       var li = el('li', 'item');
       var top = el('div', 'top'); top.append(el('span', 'pill gold', t('waiting')), el('span', '', b.at));
       li.append(top, el('div', 'title', pname(b.product_code) + ' — ' + b.qty));
-      var a = el('div', 'acts'); a.appendChild(btn(t('withdraw'), 'small danger', function(x){ act(x, 'portal_master_cancel', {p_token:S.token, p_batch:b.id}, t('withdrawn')); }));
-      li.appendChild(a); ul.appendChild(li);
+      if (!ro) { var a = el('div', 'acts'); a.appendChild(btn(t('withdraw'), 'small danger', function(x){ act(x, 'portal_master_cancel', {p_token:S.token, p_batch:b.id}, t('withdrawn')); })); li.appendChild(a); }
+      ul.appendChild(li);
     });
     w.appendChild(ul);
   }
@@ -441,7 +443,7 @@ function renderMaster(w, d){
   var rl = el('ul', 'rules'); ['rule1','rule2','rule3','rule4'].forEach(function(k){ rl.appendChild(el('li', '', t(k))); });
   rc.appendChild(rl); w.appendChild(rc);
 
-  pinBlock(w);
+  if (!ro) pinBlock(w);
 }
 
 function stepper(val, onChange, min, max){
@@ -621,7 +623,7 @@ function qcCard(b){
 }
 
 /* ---------- MANAGER ---------- */
-var TABS = [['today','Сегодня'],['workshop','Цех'],['agents','Агенты'],['people','Люди'],['docs','Документы и события']];
+var TABS = [['today','Сегодня'],['workshop','Цех'],['mview','Кабинет мастерицы'],['agents','Агенты'],['people','Люди'],['docs','Документы и события']];
 function renderManager(w, d){
   var k = d.kpi || {};
   w.appendChild(el('h1', '', 'Пульт Qalima'));
@@ -631,6 +633,7 @@ function renderManager(w, d){
   w.appendChild(tabs);
   if (S.tab === 'today') mgrToday(w, d);
   else if (S.tab === 'workshop') { S.lang = 'ru'; renderAdmin(w, d.workshop || {}, false); }
+  else if (S.tab === 'mview') mgrMasterView(w, d);
   else if (S.tab === 'agents') mgrAgents(w, d);
   else if (S.tab === 'people') mgrPeople(w, d);
   else mgrDocs(w, d);
@@ -665,6 +668,44 @@ function mgrToday(w, d){
       if (x.done_when) det.appendChild(el('div', 'how-body note', 'Готово, когда: ' + x.done_when)); li.appendChild(det); }
     var acts = el('div', 'acts'); acts.appendChild(btn('Сделано', 'small primary', function(b){ act(b, 'portal_task_done', {p_token:S.token, p_id:x.id}, 'Отмечено'); }));
     li.appendChild(acts); tl.appendChild(li); }); w.appendChild(tl); }
+}
+
+
+function mgrMasterView(w, d){
+  var masters = (d.workshop && d.workshop.masters) || [];
+  var mv = S.ui.mv || (S.ui.mv = {id:'', lang:'kk', data:null, loading:false});
+  w.appendChild(el('p', 'lead', 'Здесь вы видите кабинет мастерицы так же, как она видит его на своём телефоне. Кнопки здесь неактивны: сдавать изделия может только сама мастерица.'));
+  var bar = el('div', 'acts');
+  if (masters.length) {
+    var sel = masterSelect(masters, mv.id, function(v){ mv.id = v; mv.data = null; if (v) loadMv(); else render(); });
+    sel.style.maxWidth = '320px'; bar.appendChild(sel);
+  }
+  var lb = el('div', 'seg'); lb.style.maxWidth = '260px';
+  [['kk','Қазақша'],['ru','Русский']].forEach(function(o){ var b = el('button', mv.lang === o[0] ? 'on' : '', o[1]); b.type = 'button'; b.onclick = function(){ mv.lang = o[0]; render(); }; lb.appendChild(b); });
+  bar.appendChild(lb);
+  w.appendChild(bar);
+
+  var data = null, note = '';
+  if (!masters.length) {
+    note = 'Мастериц пока нет, поэтому показан пример с выдуманными данными. Чтобы у мастерицы появился свой кабинет: вкладка «Люди» → телефон, имя, роль «Мастерица», PIN → «Сохранить». Затем отправьте ей ссылку https://yernarbi.github.io/qalima/ и PIN в WhatsApp. Она входит со своим номером — и сразу попадает в свой кабинет.';
+    data = DEMO.rpc('portal_master_home', {});
+  } else if (!mv.id) {
+    note = 'Выберите мастерицу в списке выше.';
+  } else if (mv.loading || !mv.data) {
+    note = 'Загрузка…';
+  } else data = mv.data;
+  if (note) { var c = el('div', 'card'); c.appendChild(el('div', 'sub', note)); w.appendChild(c); }
+  if (data) {
+    var frame = el('div', 'card'); frame.style.maxWidth = '480px'; frame.style.margin = '14px auto'; frame.style.background = 'var(--bg)';
+    var keep = S.lang; S.lang = mv.lang;
+    try { renderMaster(frame, data, true); } finally { S.lang = keep; }
+    w.appendChild(frame);
+  }
+}
+function loadMv(){
+  var mv = S.ui.mv; mv.loading = true; render();
+  rpc('portal_master_view', {p_token:S.token, p_master:Number(mv.id)}).then(function(d){ mv.data = d; mv.loading = false; render(); })
+    .catch(function(){ mv.loading = false; toast(t('net'), true); render(); });
 }
 
 function mgrAgents(w, d){
@@ -817,7 +858,7 @@ var DEMO = (function(){
     wool:[{kind:'жүн', grams:600, d:'05.11', note:''}, {kind:'меринос', grams:300, d:'01.11', note:''}],
     rates:[{product_code:'SHEEP', rate:1100}, {product_code:'TAQIYA', rate:2500}, {product_code:'BAYPAQ', rate:4000}]};
   function rpc(fn, a){
-    if (fn === 'portal_master_home') return master;
+    if (fn === 'portal_master_home' || fn === 'portal_master_view') return master;
     if (fn === 'portal_admin_home') return admin();
     if (fn === 'portal_manager_home') { mgr.workshop = admin(); return mgr; }
     if (fn === 'portal_master_submit') { master.pending.unshift({id:Date.now(), product_code:a.p_product, qty:a.p_qty, at:'сейчас'}); return {ok:true}; }
