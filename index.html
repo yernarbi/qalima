@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qalima — шеберхана</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Serif:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F1EA; --surface:#FFFFFF; --ink:#24201B; --muted:#6B635A; --line:#E3DBCF;
+  --accent:#1F5F5B; --accent-ink:#FFFFFF; --accent-soft:#E3EFEC;
+  --gold:#A8792B; --gold-soft:#F6ECD9; --ok:#2E7D4F; --ok-soft:#E3F2E8; --bad:#B23D2B; --bad-soft:#F8E4DF; --warn:#A86A12;
+  --r:14px; --font:"Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --serif:"Noto Serif",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#15130F; --surface:#1F1C17; --ink:#EEE8DF; --muted:#A79E92; --line:#35302A;
+    --accent:#5BB5AC; --accent-ink:#0F1A19; --accent-soft:#1C302E; --gold:#D9A953; --gold-soft:#332816;
+    --ok:#62C08A; --ok-soft:#18301F; --bad:#E5735E; --bad-soft:#3A1F1A; --warn:#E0A341;}
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.45;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 80px}
+.wide .wrap{max-width:1100px}
+header.bar{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header.bar .in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.brand{font-family:var(--serif);font-weight:700;font-size:20px;letter-spacing:.3px}
+.brand small{display:block;font-family:var(--font);font-weight:500;font-size:12px;color:var(--muted);letter-spacing:0}
+.sp{flex:1}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:14px;cursor:pointer;min-height:40px}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+h1{font-family:var(--serif);font-size:26px;line-height:1.2;margin:22px 0 4px}
+h2{font-size:19px;margin:28px 0 10px;display:flex;align-items:center;gap:8px}
+h2 .count{font-size:14px;font-weight:600;color:var(--muted)}
+.lead{color:var(--muted);margin:0 0 6px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:10px 0}
+.hero{background:var(--accent);color:var(--accent-ink);border:0}
+.hero .lbl{opacity:.85;font-size:15px}
+.hero .big{font-size:40px;font-weight:700;line-height:1.1;margin:4px 0 8px;font-variant-numeric:tabular-nums}
+.hero .row{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:15px;opacity:.95}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#fff}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.btn.block{width:100%}
+.btn.small{min-height:40px;padding:8px 12px;font-size:15px;border-radius:10px}
+.btn:disabled{opacity:.5;cursor:default}
+.list{list-style:none;margin:0;padding:0}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:8px 0}
+.item .top{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:14px;color:var(--muted)}
+.item .title{font-weight:600;margin-top:4px}
+.item .sub{color:var(--muted);font-size:15px;margin-top:2px}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:13px;font-weight:600;background:var(--accent-soft);color:var(--accent)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.gold{background:var(--gold-soft);color:var(--gold)}
+.empty{color:var(--muted);padding:14px;border:1px dashed var(--line);border-radius:var(--r);text-align:center}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.prod{border:2px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 6px;text-align:center;cursor:pointer;min-height:120px}
+.prod svg{width:52px;height:52px;display:block;margin:4px auto 6px;color:var(--accent)}
+.prod .n{font-weight:700}
+.prod .p{font-size:13px;color:var(--muted)}
+.prod.on{border-color:var(--accent);background:var(--accent-soft)}
+.stepper{display:flex;align-items:center;gap:10px;justify-content:center;margin:10px 0}
+.stepper button{width:56px;height:56px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-size:28px;font-weight:600;cursor:pointer}
+.stepper input{width:90px;height:56px;text-align:center;font-size:28px;font-weight:700;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.qc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.qc .cell{border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}
+.qc .cell .l{font-size:14px;font-weight:600}
+.qc .cell.ok .l{color:var(--ok)} .qc .cell.rw .l{color:var(--warn)} .qc .cell.bd .l{color:var(--bad)}
+.qc .mini{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px}
+.qc .mini button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:22px;cursor:pointer}
+.qc .mini span{min-width:28px;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+label.f{display:block;margin:12px 0 4px;font-size:15px;font-weight:600}
+input.t,select.t,textarea.t{width:100%;min-height:52px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+textarea.t{min-height:80px}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{flex:1;min-width:30%;min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.bar-p{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:8px}
+.bar-p i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;z-index:20;max-width:90vw;text-align:center}
+.toast.bad{background:var(--bad);color:#fff}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.kpi .v{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:13px;color:var(--muted)}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
+.tabs button{white-space:nowrap}
+table.tb{width:100%;border-collapse:collapse;font-size:15px}
+table.tb th{text-align:left;font-size:13px;color:var(--muted);font-weight:600;padding:8px 6px;border-bottom:1px solid var(--line)}
+table.tb td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.tb td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.scroll-x{overflow-x:auto}
+details.how{margin-top:8px;border:1px solid var(--line);border-radius:10px;background:var(--accent-soft)}
+details.how summary{cursor:pointer;padding:8px 12px;font-weight:600;font-size:15px;color:var(--accent);list-style:none}
+details.how summary::-webkit-details-marker{display:none}
+.how-body{white-space:pre-wrap;padding:0 12px 10px;font-size:15px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.note{font-size:14px;color:var(--muted)}
+.login{max-width:420px;margin:0 auto;padding:40px 16px}
+.login .logo{font-family:var(--serif);font-size:34px;font-weight:700;text-align:center;margin:20px 0 2px}
+.login .tag{text-align:center;color:var(--muted);margin-bottom:24px}
+.err{color:var(--bad);font-weight:600;margin-top:10px;min-height:1.4em}
+.rules li{margin:6px 0}
+.verdict-ok{color:var(--ok);font-weight:600} .verdict-bad{color:var(--bad);font-weight:600} .verdict-warn{color:var(--warn);font-weight:600}
+.demo-banner{background:var(--gold-soft);color:var(--gold);text-align:center;font-size:14px;padding:6px 10px;font-weight:600}
+</style>
+</head>
+<body>
+<div id="demo-banner" class="demo-banner" hidden></div>
+<header class="bar" id="bar" hidden>
+  <div class="in">
+    <div class="brand">Qalima<small id="bar-role"></small></div>
+    <div class="sp"></div>
+    <button class="chip" id="lang-btn" type="button"></button>
+    <button class="chip" id="refresh-btn" type="button" aria-label="refresh">⟳</button>
+    <button class="chip" id="logout-btn" type="button"></button>
+  </div>
+</header>
+<main id="app"></main>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+var SB = 'https://fuywbmwbjtyfwgllqiox.supabase.co';
+var KEY = 'sb_publishable_tXlo9-Qt-EXlI-C3XvNBZw_zxFi3KuF';
+var SANDBOX = /claude|anthropic/i.test(location.hostname) || location.protocol === 'file:' || location.protocol === 'blob:' || location.hostname === '' ;
+
+/* ---------- texts ---------- */
+var T = {
+ kk: {
+  role_master:'Шебер кабинеті', role_admin:'Әкімші кабинеті', role_manager:'Басқарушы',
+  login_title:'Шеберханаға кіру', login_tag:'Киіз шеберханасы · Түркістан облысы',
+  phone:'Телефон нөмірі', pin:'PIN-код (6 сан)', enter:'Кіру', bad_login:'Нөмір немесе PIN қате.',
+  locked:'Тым көп қате. {t}-да қайта көріңіз.', net:'Байланыс жоқ. Интернетті тексеріп, қайта көріңіз.', sandbox:'Бұл — алдын ала көрініс, мұнда кіру жұмыс істемейді. Сайтты сілтеме арқылы ашыңыз немесе «Демо» режимін қараңыз.',
+  logout:'Шығу', lang:'Рус', hello:'Сәлеметсіз бе, {n}!',
+  earn:'Осы айғы табысыңыз', accepted:'Қабылданды', rework:'Түзетуге', rejected:'Ақау', deduction:'Ұсталым', topay:'Төленеді',
+  submit_big:'＋ Дайын бұйымды тапсыру', choose:'Бұйымды таңдаңыз', qty:'Саны', note_opt:'Ескертпе (міндетті емес)',
+  submit:'Тапсыру', submitted:'Тапсырылды! Әкімші тексереді.', cancel:'Бас тарту',
+  pending:'Тексеруді күтуде', withdraw:'Қайтарып алу', withdrawn:'Қайтарылды',
+  tasks:'Тапсырмаларым', done_of:'{d} / {q} дайын', due:'мерзімі {d}', no_tasks:'Әзірге тапсырма жоқ.',
+  checked:'Тексеру нәтижелері', reason:'Себебі', no_checked:'Әзірге тексерілген бұйым жоқ.',
+  wool:'Алған жүнім (осы ай)', no_wool:'Осы айда жүн алынбаған.', g:'г',
+  rates:'Бағалар мен ережелер', per_piece:'1 дана үшін',
+  rule1:'Тек сапа тексеруінен (ОТК) өткен бұйымға төленеді.',
+  rule2:'Материал кінәлі ақау — бұйым толық төленеді.',
+  rule3:'Шебердің кінәсінен болған ақау төленбейді. Жүн құны тек жазбаша келісіммен ұсталады және айлықтың 50%-ынан аспайды.',
+  rule4:'«Түзетуге» қайтарылған бұйымды түзеп, қайта тапсырыңыз.',
+  pin_change:'PIN-кодты ауыстыру', pin_old:'Ескі PIN', pin_new:'Жаңа PIN (6 сан)', save:'Сақтау', saved:'Сақталды',
+  error:'Қате болды. Қайта көріңіз.', loading:'Жүктелуде…', refresh:'Жаңарту',
+  /* admin */
+  qc_title:'Сапа тексеру (ОТК)', qc_lead:'Әр бұйымды эталонмен салыстырыңыз. Барлығы {q} дана болуы керек.',
+  no_pending:'Тексеруді күтетін бұйым жоқ.', fault:'Ақау кімнің кінәсінен?', f_master:'Шебер', f_material:'Материал', f_unknown:'Белгісіз',
+  reason_need:'Себебін жазыңыз (мысалы: тесік, жиегі тегіс емес)', sum_bad:'Сандардың қосындысы {q} болуы керек.',
+  reason_req:'Ақау не түзету болса — себебін жазыңыз.', qc_saved:'Тексеру сақталды',
+  today_acc:'Бүгін қабылданды', waiting:'Күтуде',
+  wool_give:'Шеберге жүн беру', master:'Шебер', wool_kind:'Жүн түрі', k_wool:'Жүн (тақия, байпақ)', k_merino:'Меринос (қошақан)',
+  grams:'Грамм', give:'Беру', wool_given:'Жүн берілді', wool_stock:'Жүн қоймасы', wool_in:'Жүн келді (қоймаға қосу)', add:'Қосу',
+  task_give:'Шеберге тапсырма беру', product:'Бұйым', due_date:'Мерзімі', task_given:'Тапсырма берілді',
+  masters:'Шеберлер', m_line:'Осы ай: {a} қабылданды · {p} ₸ · ақау {d}% · жүн {w} г',
+  open_tasks:'Ашық тапсырмалар', no_masters:'Шеберлер әлі қосылмаған. Басқарушы қосады.',
+  recent_wool:'Соңғы берілген жүн', choose_master:'— шеберді таңдаңыз —'
+ },
+ ru: {
+  role_master:'Кабинет мастерицы', role_admin:'Кабинет администратора', role_manager:'Управляющий',
+  login_title:'Вход в мастерскую', login_tag:'Войлочная мастерская · Туркестанская область',
+  phone:'Номер телефона', pin:'PIN-код (6 цифр)', enter:'Войти', bad_login:'Неверный номер или PIN.',
+  locked:'Слишком много попыток. Попробуйте в {t}.', net:'Нет связи. Проверьте интернет и попробуйте снова.', sandbox:'Это превью: здесь вход не работает, потому что превью не пускает страницу к базе. Вход заработает на сайте по ссылке. Пока можно открыть «Посмотреть демо».',
+  logout:'Выйти', lang:'Қаз', hello:'Здравствуйте, {n}!',
+  earn:'Ваш заработок за месяц', accepted:'Принято', rework:'На доработку', rejected:'Брак', deduction:'Удержание', topay:'К выплате',
+  submit_big:'＋ Сдать готовые изделия', choose:'Выберите изделие', qty:'Количество', note_opt:'Комментарий (необязательно)',
+  submit:'Сдать', submitted:'Сдано! Администратор проверит.', cancel:'Отмена',
+  pending:'Ждут проверки', withdraw:'Забрать', withdrawn:'Отменено',
+  tasks:'Мои задания', done_of:'{d} / {q} готово', due:'срок {d}', no_tasks:'Пока заданий нет.',
+  checked:'Результаты проверки', reason:'Причина', no_checked:'Проверенных изделий пока нет.',
+  wool:'Полученная шерсть (этот месяц)', no_wool:'В этом месяце шерсть не выдавалась.', g:'г',
+  rates:'Расценки и правила', per_piece:'за 1 шт.',
+  rule1:'Оплачиваются только изделия, принятые ОТК.',
+  rule2:'Брак по вине материала — изделие оплачивается полностью.',
+  rule3:'Брак по вине мастера не оплачивается. Стоимость шерсти удерживается только с письменного согласия и не больше 50% заработка.',
+  rule4:'Изделие «на доработку» исправьте и сдайте снова.',
+  pin_change:'Сменить PIN-код', pin_old:'Старый PIN', pin_new:'Новый PIN (6 цифр)', save:'Сохранить', saved:'Сохранено',
+  error:'Ошибка. Попробуйте ещё раз.', loading:'Загрузка…', refresh:'Обновить',
+  qc_title:'Проверка качества (ОТК)', qc_lead:'Сравните каждое изделие с эталоном. Всего должно быть {q} шт.',
+  no_pending:'Изделий на проверку нет.', fault:'Чья вина брака?', f_master:'Мастер', f_material:'Материал', f_unknown:'Неизвестно',
+  reason_need:'Напишите причину (например: дыра, неровный край)', sum_bad:'Сумма должна быть {q}.',
+  reason_req:'Если есть брак или доработка — напишите причину.', qc_saved:'Проверка сохранена',
+  today_acc:'Принято сегодня', waiting:'Ждут',
+  wool_give:'Выдать шерсть мастерице', master:'Мастерица', wool_kind:'Вид шерсти', k_wool:'Шерсть (тақия, байпақ)', k_merino:'Меринос (овечки)',
+  grams:'Граммы', give:'Выдать', wool_given:'Шерсть выдана', wool_stock:'Склад шерсти', wool_in:'Пришла шерсть (добавить на склад)', add:'Добавить',
+  task_give:'Дать задание мастерице', product:'Изделие', due_date:'Срок', task_given:'Задание выдано',
+  masters:'Мастерицы', m_line:'Месяц: принято {a} · {p} ₸ · брак {d}% · шерсть {w} г',
+  open_tasks:'Открытые задания', no_masters:'Мастерицы ещё не добавлены. Их добавляет управляющий.',
+  recent_wool:'Последние выдачи шерсти', choose_master:'— выберите мастерицу —'
+ }
+};
+var PROD = {
+  TAQIYA:{kk:'Тақия', ru:'Тақия'}, BAYPAQ:{kk:'Байпақ', ru:'Байпақ'}, SHEEP:{kk:'Қошақан', ru:'Овечка'}
+};
+var ICON = {
+  TAQIYA:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M10 44c0-14 10-26 22-26s22 12 22 26z"/><path d="M8 44h48v6H8z"/><path d="M22 30c3 3 7 3 10 0s7-3 10 0"/></svg>',
+  BAYPAQ:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M22 8h16v28l14 8c4 2 4 10-2 10H16c-3 0-4-2-4-5V36l10-4z"/><path d="M22 18h16"/></svg>',
+  SHEEP:'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M18 40c-6 0-8-8-3-10-2-6 5-10 9-6 2-5 10-5 12 0 4-4 11 0 9 6 5 2 3 10-3 10z"/><circle cx="48" cy="30" r="5"/><path d="M24 40v10M38 40v10"/></svg>'
+};
+
+/* ---------- state ---------- */
+var S = { token:null, role:null, name:'', lang:'kk', data:null, demo:false, tab:'today', ui:{} };
+try { var saved = JSON.parse(localStorage.getItem('qalima_portal') || 'null'); if (saved) { S.token = saved.token; S.role = saved.role; S.name = saved.name; S.lang = saved.lang || 'kk'; } } catch(e) {}
+function persist(){ try { localStorage.setItem('qalima_portal', JSON.stringify({token:S.token, role:S.role, name:S.name, lang:S.lang})); } catch(e) {} }
+
+/* ---------- helpers ---------- */
+var $ = function(id){ return document.getElementById(id); };
+function el(tag, cls, text){ var n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined && text !== null) n.textContent = String(text); return n; }
+function t(key, vars){ var s = (T[S.lang] && T[S.lang][key]) || T.ru[key] || key; if (vars) Object.keys(vars).forEach(function(k){ s = s.split('{'+k+'}').join(vars[k]); }); return s; }
+function fmt(v){ return new Intl.NumberFormat('ru-RU').format(Math.round(Number(v) || 0)).replace(/[  ]/g, ' '); }
+function pname(code){ return (PROD[code] && PROD[code][S.lang]) || code; }
+function btn(label, cls, fn){ var b = el('button', 'btn' + (cls ? ' ' + cls : ''), label); b.type = 'button'; if (fn) b.addEventListener('click', function(){ fn(b); }); return b; }
+function toast(msg, bad){ var n = $('toast'); n.textContent = msg; n.className = 'toast' + (bad ? ' bad' : ''); n.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function(){ n.hidden = true; }, 2800); }
+function section(title, count){ var h = el('h2', '', title); if (count !== undefined) h.appendChild(el('span', 'count', count)); return h; }
+function empty(txt){ return el('div', 'empty', txt); }
+function svgIcon(code){ var d = el('span'); d.innerHTML = ICON[code]; return d.firstChild; }
+function todayISO(add){ var d = new Date(Date.now() + 5*3600*1000 + (add||0)*86400000); return d.toISOString().slice(0,10); }
+
+/* ---------- API ---------- */
+function rpc(fn, args){
+  if (S.demo) return Promise.resolve(DEMO.rpc(fn, args || {}));
+  return fetch(SB + '/rest/v1/rpc/' + fn, { method:'POST', headers:{ 'apikey':KEY, 'Content-Type':'application/json' }, body: JSON.stringify(args || {}) })
+    .then(function(r){ return r.text().then(function(txt){
+      var j = null; try { j = JSON.parse(txt); } catch(e) {}
+      if (!r.ok) {
+        var msg = (j && j.message) || ('HTTP ' + r.status);
+        if (msg === 'AUTH') { logout(true); }
+        var e = new Error(msg); e.server = true; throw e;
+      }
+      return j;
+    }); });
+}
+function act(b, fn, args, okMsg){
+  if (b) b.disabled = true;
+  return rpc(fn, args).then(function(res){
+    if (res && res.ok === false) { if (b) b.disabled = false; toast(errText(res), true); return res; }
+    if (okMsg) toast(okMsg);
+    return load().then(function(){ return res; });
+  }).catch(function(e){ if (b) b.disabled = false; toast(e.server ? t('error') : t('net'), true); });
+}
+function errText(res){
+  if (res.error === 'sum') return t('sum_bad', {q: res.qty});
+  if (res.error === 'reason') return t('reason_req');
+  if (res.error === 'pin_format') return S.lang === 'kk' ? 'PIN 6 саннан тұруы керек.' : 'PIN должен состоять из 6 цифр.';
+  if (res.error === 'bad_old') return S.lang === 'kk' ? 'Ескі PIN қате.' : 'Старый PIN неверный.';
+  if (res.error === 'phone') return 'Номер: 8 7XX XXX XX XX';
+  if (res.error === 'pin_required') return 'Для нового человека нужен PIN из 6 цифр.';
+  if (res.error === 'self') return 'Нельзя отключить или понизить самого себя.';
+  return t('error');
+}
+
+/* ---------- auth ---------- */
+function logout(silent){
+  if (S.token && !S.demo && !silent) rpc('portal_logout', {p_token:S.token}).catch(function(){});
+  S.token = null; S.role = null; S.data = null; S.demo = false; persist(); renderLogin();
+}
+
+function renderLogin(){
+  $('bar').hidden = true; $('demo-banner').hidden = true;
+  document.body.classList.remove('wide');
+  var app = $('app'); app.replaceChildren();
+  var box = el('div', 'login');
+  box.append(el('div', 'logo', 'Qalima'), el('div', 'tag', t('login_tag')));
+  var lb = el('div', 'seg');
+  ['kk','ru'].forEach(function(l){ var b = el('button', S.lang === l ? 'on' : '', l === 'kk' ? 'Қазақша' : 'Русский'); b.type = 'button'; b.onclick = function(){ S.lang = l; persist(); renderLogin(); }; lb.appendChild(b); });
+  box.appendChild(lb);
+  var card = el('div', 'card');
+  card.appendChild(el('h2', '', t('login_title')));
+  var l1 = el('label', 'f', t('phone')); var ph = el('input', 't'); ph.type = 'tel'; ph.inputMode = 'tel'; ph.placeholder = '8 7__ ___ __ __'; ph.autocomplete = 'tel'; ph.id = 'ph'; l1.htmlFor = 'ph';
+  var l2 = el('label', 'f', t('pin')); var pin = el('input', 't'); pin.type = 'password'; pin.inputMode = 'numeric'; pin.maxLength = 6; pin.autocomplete = 'current-password'; pin.id = 'pin'; l2.htmlFor = 'pin';
+  var err = el('div', 'err');
+  var go = btn(t('enter'), 'primary block', function(b){
+    err.textContent = ''; b.disabled = true;
+    rpc('portal_login', {p_phone: ph.value, p_pin: pin.value}).then(function(r){
+      b.disabled = false;
+      if (!r || !r.ok) { err.textContent = r && r.error === 'locked' ? t('locked', {t:r.until}) : t('bad_login'); return; }
+      S.token = r.token; S.role = r.role; S.name = r.name; if (r.role === 'manager') S.lang = 'ru'; persist(); start();
+    }).catch(function(){ b.disabled = false; err.textContent = SANDBOX ? t('sandbox') : t('net'); });
+  });
+  go.style.marginTop = '16px';
+  pin.addEventListener('keydown', function(e){ if (e.key === 'Enter') go.click(); });
+  card.append(l1, ph, l2, pin, go, err);
+  box.appendChild(card);
+  var demo = el('p', 'note'); demo.style.textAlign = 'center';
+  var a = el('a', '', S.lang === 'kk' ? 'Көрсетілім режимі (демо)' : 'Посмотреть демо'); a.href = '#demo';
+  a.onclick = function(e){ e.preventDefault(); startDemoPicker(); };
+  demo.appendChild(a); box.appendChild(demo);
+  app.appendChild(box);
+}
+
+function startDemoPicker(){
+  var app = $('app'); app.replaceChildren();
+  var box = el('div', 'login');
+  box.append(el('div', 'logo', 'Qalima'), el('div', 'tag', 'Демо: выберите кабинет. Данные выдуманы, ничего не сохраняется.'));
+  [['master','Шебер (мастерица)','kk'],['admin','Әкімші (администратор)','kk'],['manager','Управляющий','ru']].forEach(function(r){
+    var b = btn(r[1], 'block', function(){ S.demo = true; S.role = r[0]; S.name = DEMO.names[r[0]]; S.lang = r[2]; S.token = 'demo'; start(); });
+    b.style.margin = '8px 0'; box.appendChild(b);
+  });
+  var back = btn('←', 'small', function(){ S.demo = false; renderLogin(); }); box.appendChild(back);
+  app.appendChild(box);
+}
+
+/* ---------- shell ---------- */
+function start(){
+  $('bar').hidden = false;
+  $('demo-banner').hidden = !S.demo;
+  $('demo-banner').textContent = S.demo ? 'ДЕМО — данные выдуманы. Для работы войдите по своему номеру.' : '';
+  document.body.classList.toggle('wide', S.role === 'manager');
+  paintBar();
+  $('app').replaceChildren(el('div', 'wrap', t('loading')));
+  load();
+}
+function paintBar(){
+  $('bar-role').textContent = t('role_' + S.role) + (S.name ? ' · ' + S.name : '');
+  $('lang-btn').textContent = t('lang');
+  $('lang-btn').hidden = S.role === 'manager';
+  $('logout-btn').textContent = t('logout');
+}
+$('lang-btn').onclick = function(){ S.lang = S.lang === 'kk' ? 'ru' : 'kk'; persist(); paintBar(); render(); };
+$('logout-btn').onclick = function(){ logout(false); };
+$('refresh-btn').onclick = function(){ load().then(function(){ toast(t('refresh') + ' ✓'); }); };
+
+function load(){
+  var fn = S.role === 'master' ? 'portal_master_home' : S.role === 'admin' ? 'portal_admin_home' : 'portal_manager_home';
+  return rpc(fn, {p_token:S.token}).then(function(d){ S.data = d; render(); })
+    .catch(function(e){ if (!S.token) return; $('app').replaceChildren(el('div', 'wrap', e.server ? t('error') : t('net'))); });
+}
+function render(){
+  if (!S.data) return;
+  var w = el('div', 'wrap');
+  if (S.role === 'master') renderMaster(w, S.data);
+  else if (S.role === 'admin') renderAdmin(w, S.data, true);
+  else renderManager(w, S.data);
+  $('app').replaceChildren(w);
+}
+
+/* ---------- MASTER ---------- */
+function renderMaster(w, d){
+  w.appendChild(el('h1', '', t('hello', {n: d.name})));
+  var p = d.pay || {accepted:0, rejected_master_fault:0, rework:0, deduction:0, to_pay:0};
+  var hero = el('div', 'card hero');
+  hero.append(el('div', 'lbl', t('earn')), el('div', 'big', fmt(p.to_pay) + ' ₸'));
+  var row = el('div', 'row');
+  row.append(el('span', '', t('accepted') + ': ' + fmt(p.accepted)), el('span', '', t('rework') + ': ' + fmt(p.rework)),
+             el('span', '', t('rejected') + ': ' + fmt(Number(p.rejected_master_fault||0) + Number(p.rejected_not_master_fault||0))));
+  if (Number(p.deduction) > 0) row.appendChild(el('span', '', t('deduction') + ': −' + fmt(p.deduction) + ' ₸'));
+  hero.appendChild(row); w.appendChild(hero);
+
+  /* submit */
+  var ui = S.ui.sub || (S.ui.sub = {open:false, product:null, qty:1, note:''});
+  if (!ui.open) {
+    w.appendChild(btn(t('submit_big'), 'gold block', function(){ ui.open = true; render(); }));
+  } else {
+    var c = el('div', 'card');
+    c.appendChild(el('div', 'title', t('choose')));
+    var g = el('div', 'grid3');
+    var rates = {}; (d.rates || []).forEach(function(r){ rates[r.product_code] = r.rate; });
+    ['TAQIYA','BAYPAQ','SHEEP'].forEach(function(code){
+      var b = el('button', 'prod' + (ui.product === code ? ' on' : '')); b.type = 'button';
+      b.append(svgIcon(code), el('div', 'n', pname(code)), el('div', 'p', fmt(rates[code]) + ' ₸'));
+      b.onclick = function(){ ui.product = code; render(); };
+      g.appendChild(b);
+    });
+    c.appendChild(g);
+    c.appendChild(el('label', 'f', t('qty')));
+    c.appendChild(stepper(ui.qty, function(v){ ui.qty = v; }, 1, 200));
+    var nl = el('label', 'f', t('note_opt')); var ni = el('input', 't'); ni.value = ui.note; ni.oninput = function(){ ui.note = ni.value; };
+    c.append(nl, ni);
+    var acts = el('div', 'acts');
+    var sb = btn(t('submit'), 'primary', function(b){
+      if (!ui.product) { toast(t('choose'), true); return; }
+      act(b, 'portal_master_submit', {p_token:S.token, p_product:ui.product, p_qty:ui.qty, p_note:ui.note}, t('submitted'))
+        .then(function(r){ if (r && r.ok !== false) { S.ui.sub = {open:false, product:null, qty:1, note:''}; render(); } });
+    });
+    sb.style.flex = '1';
+    acts.append(sb, btn(t('cancel'), '', function(){ ui.open = false; render(); }));
+    c.appendChild(acts);
+    w.appendChild(c);
+  }
+
+  /* pending */
+  if ((d.pending || []).length) {
+    w.appendChild(section(t('pending'), d.pending.length));
+    var ul = el('ul', 'list');
+    d.pending.forEach(function(b){
+      var li = el('li', 'item');
+      var top = el('div', 'top'); top.append(el('span', 'pill gold', t('waiting')), el('span', '', b.at));
+      li.append(top, el('div', 'title', pname(b.product_code) + ' — ' + b.qty));
+      var a = el('div', 'acts'); a.appendChild(btn(t('withdraw'), 'small danger', function(x){ act(x, 'portal_master_cancel', {p_token:S.token, p_batch:b.id}, t('withdrawn')); }));
+      li.appendChild(a); ul.appendChild(li);
+    });
+    w.appendChild(ul);
+  }
+
+  /* tasks */
+  w.appendChild(section(t('tasks'), (d.tasks || []).length || ''));
+  if (!(d.tasks || []).length) w.appendChild(empty(t('no_tasks')));
+  else { var tl = el('ul', 'list'); d.tasks.forEach(function(x){
+    var li = el('li', 'item');
+    var top = el('div', 'top'); if (x.due) top.appendChild(el('span', '', t('due', {d:x.due})));
+    li.append(top, el('div', 'title', pname(x.product_code) + ' — ' + x.qty), el('div', 'sub', t('done_of', {d:x.done_qty, q:x.qty})));
+    var bar = el('div', 'bar-p'); var i = el('i'); i.style.width = Math.min(100, Math.round(100 * x.done_qty / Math.max(1, x.qty))) + '%'; bar.appendChild(i); li.appendChild(bar);
+    tl.appendChild(li); }); w.appendChild(tl); }
+
+  /* checked */
+  w.appendChild(section(t('checked')));
+  if (!(d.checked || []).length) w.appendChild(empty(t('no_checked')));
+  else { var cl = el('ul', 'list'); d.checked.forEach(function(x){
+    var li = el('li', 'item');
+    var top = el('div', 'top'); top.append(el('span', '', x.d));
+    if (x.accepted) top.appendChild(el('span', 'pill ok', t('accepted') + ' ' + x.accepted));
+    if (x.rework) top.appendChild(el('span', 'pill gold', t('rework') + ' ' + x.rework));
+    if (x.rejected) top.appendChild(el('span', 'pill bad', t('rejected') + ' ' + x.rejected + (x.fault === 'материал' ? ' · ' + t('f_material') : x.fault === 'мастер' ? ' · ' + t('f_master') : '')));
+    li.append(top, el('div', 'title', pname(x.product_code) + ' — ' + x.qty));
+    if (x.reason) li.appendChild(el('div', 'sub', t('reason') + ': ' + x.reason));
+    cl.appendChild(li); }); w.appendChild(cl); }
+
+  /* wool */
+  w.appendChild(section(t('wool')));
+  if (!(d.wool || []).length) w.appendChild(empty(t('no_wool')));
+  else { var total = 0; var wl = el('ul', 'list'); d.wool.forEach(function(x){ total += Number(x.grams);
+    var li = el('li', 'item'); li.append(el('div', 'top', x.d), el('div', 'title', fmt(x.grams) + ' ' + t('g') + ' · ' + (x.kind === 'меринос' ? t('k_merino') : t('k_wool'))));
+    if (x.note) li.appendChild(el('div', 'sub', x.note)); wl.appendChild(li); });
+    w.appendChild(el('p', 'lead', 'Σ ' + fmt(total) + ' ' + t('g'))); w.appendChild(wl); }
+
+  /* rates & rules */
+  w.appendChild(section(t('rates')));
+  var rc = el('div', 'card');
+  var rg = el('div', 'grid3');
+  (d.rates || []).forEach(function(r){ var b = el('div', 'prod'); b.style.cursor = 'default'; b.append(svgIcon(r.product_code), el('div', 'n', pname(r.product_code)), el('div', 'p', fmt(r.rate) + ' ₸ ' + t('per_piece'))); rg.appendChild(b); });
+  rc.appendChild(rg);
+  var rl = el('ul', 'rules'); ['rule1','rule2','rule3','rule4'].forEach(function(k){ rl.appendChild(el('li', '', t(k))); });
+  rc.appendChild(rl); w.appendChild(rc);
+
+  pinBlock(w);
+}
+
+function stepper(val, onChange, min, max){
+  var box = el('div', 'stepper');
+  var minus = el('button', '', '−'); minus.type = 'button';
+  var inp = el('input'); inp.type = 'number'; inp.inputMode = 'numeric'; inp.value = val; inp.min = min; inp.max = max;
+  var plus = el('button', '', '+'); plus.type = 'button';
+  function set(v){ v = Math.max(min, Math.min(max, parseInt(v, 10) || min)); inp.value = v; onChange(v); }
+  minus.onclick = function(){ set(Number(inp.value) - 1); };
+  plus.onclick = function(){ set(Number(inp.value) + 1); };
+  inp.onchange = function(){ set(inp.value); };
+  box.append(minus, inp, plus); return box;
+}
+
+function pinBlock(w){
+  var det = el('details', 'how'); det.style.marginTop = '28px';
+  det.appendChild(el('summary', '', t('pin_change')));
+  var body = el('div'); body.style.padding = '0 12px 12px';
+  var o = el('input', 't'); o.type = 'password'; o.inputMode = 'numeric'; o.maxLength = 6;
+  var n = el('input', 't'); n.type = 'password'; n.inputMode = 'numeric'; n.maxLength = 6;
+  body.append(el('label', 'f', t('pin_old')), o, el('label', 'f', t('pin_new')), n);
+  var b = btn(t('save'), 'primary', function(x){ if (S.demo) { toast(t('saved')); return; }
+    x.disabled = true; rpc('portal_change_pin', {p_token:S.token, p_old:o.value, p_new:n.value}).then(function(r){ x.disabled = false; if (r && r.ok) { o.value = ''; n.value = ''; toast(t('saved')); } else toast(errText(r || {}), true); }).catch(function(){ x.disabled = false; toast(t('net'), true); }); });
+  b.style.marginTop = '12px'; body.appendChild(b); det.appendChild(body); w.appendChild(det);
+}
+
+/* ---------- ADMIN (also used inside manager) ---------- */
+function renderAdmin(w, d, standalone){
+  if (standalone) w.appendChild(el('h1', '', t('hello', {n: d.name})));
+  var k = el('div', 'kpis');
+  [[t('waiting'), (d.pending || []).length], [t('today_acc'), d.checked_today || 0], [t('masters'), (d.masters || []).length]].forEach(function(x){
+    var c = el('div', 'kpi'); c.append(el('div', 'v', fmt(x[1])), el('div', 'l', x[0])); k.appendChild(c); });
+  w.appendChild(k);
+
+  /* QC */
+  w.appendChild(section(t('qc_title'), (d.pending || []).length || ''));
+  if (!(d.pending || []).length) w.appendChild(empty(t('no_pending')));
+  (d.pending || []).forEach(function(b){ w.appendChild(qcCard(b)); });
+
+  /* wool */
+  var masters = d.masters || [];
+  w.appendChild(section(t('wool_give')));
+  if (!masters.length) w.appendChild(empty(t('no_masters')));
+  else {
+    var wu = S.ui.wool || (S.ui.wool = {master:'', kind:'жүн', grams:300});
+    var c = el('div', 'card');
+    c.append(el('label', 'f', t('master')), masterSelect(masters, wu.master, function(v){ wu.master = v; }));
+    c.appendChild(el('label', 'f', t('wool_kind')));
+    var seg = el('div', 'seg');
+    [['жүн', t('k_wool')], ['меринос', t('k_merino')]].forEach(function(o){ var b = el('button', wu.kind === o[0] ? 'on' : '', o[1]); b.type = 'button'; b.onclick = function(){ wu.kind = o[0]; render(); }; seg.appendChild(b); });
+    c.appendChild(seg);
+    c.appendChild(el('label', 'f', t('grams')));
+    c.appendChild(stepperBig(wu.grams, 50, 20000, 50, function(v){ wu.grams = v; }));
+    var gb = btn(t('give'), 'primary block', function(x){
+      if (!wu.master) { toast(t('choose_master'), true); return; }
+      act(x, 'portal_admin_wool', {p_token:S.token, p_master:Number(wu.master), p_kind:wu.kind, p_grams:wu.grams, p_note:null}, t('wool_given'));
+    });
+    gb.style.marginTop = '12px'; c.appendChild(gb);
+    w.appendChild(c);
+  }
+  /* wool stock */
+  var sc = el('div', 'card');
+  sc.appendChild(el('div', 'title', t('wool_stock')));
+  (d.wool_stock || []).forEach(function(s){
+    var r = el('div', 'sub'); r.textContent = (s.item.indexOf('меринос') >= 0 ? t('k_merino') : t('k_wool')) + ': ' + fmt(s.qty) + ' ' + t('g');
+    if (Number(s.qty) < 0) r.style.color = 'var(--bad)';
+    sc.appendChild(r);
+  });
+  var wi = S.ui.woolIn || (S.ui.woolIn = {kind:'жүн', grams:1000});
+  var det = el('details', 'how'); det.appendChild(el('summary', '', t('wool_in')));
+  var body = el('div'); body.style.padding = '0 12px 12px';
+  var seg2 = el('div', 'seg');
+  [['жүн', t('k_wool')], ['меринос', t('k_merino')]].forEach(function(o){ var b = el('button', wi.kind === o[0] ? 'on' : '', o[1]); b.type = 'button'; b.onclick = function(){ wi.kind = o[0]; render(); }; seg2.appendChild(b); });
+  body.appendChild(seg2);
+  body.appendChild(stepperBig(wi.grams, 100, 100000, 100, function(v){ wi.grams = v; }));
+  body.appendChild(btn(t('add'), 'primary', function(x){ act(x, 'portal_admin_wool_in', {p_token:S.token, p_kind:wi.kind, p_grams:wi.grams}, t('saved')); }));
+  det.appendChild(body); sc.appendChild(det);
+  if ((d.wool_recent || []).length) {
+    sc.appendChild(el('div', 'f', t('recent_wool'))).className = 'f';
+    d.wool_recent.forEach(function(x){ sc.appendChild(el('div', 'note', x.d + ' · ' + x.master + ' · ' + fmt(x.grams) + ' ' + t('g') + ' · ' + (x.kind === 'меринос' ? t('k_merino') : t('k_wool')))); });
+  }
+  w.appendChild(sc);
+
+  /* task give */
+  if (masters.length) {
+    w.appendChild(section(t('task_give')));
+    var tu = S.ui.task || (S.ui.task = {master:'', product:'SHEEP', qty:10, due:todayISO(7)});
+    var tc = el('div', 'card');
+    tc.append(el('label', 'f', t('master')), masterSelect(masters, tu.master, function(v){ tu.master = v; }));
+    tc.appendChild(el('label', 'f', t('product')));
+    var seg3 = el('div', 'seg');
+    ['TAQIYA','BAYPAQ','SHEEP'].forEach(function(code){ var b = el('button', tu.product === code ? 'on' : '', pname(code)); b.type = 'button'; b.onclick = function(){ tu.product = code; render(); }; seg3.appendChild(b); });
+    tc.appendChild(seg3);
+    tc.appendChild(el('label', 'f', t('qty')));
+    tc.appendChild(stepper(tu.qty, function(v){ tu.qty = v; }, 1, 500));
+    var dl = el('label', 'f', t('due_date')); var di = el('input', 't'); di.type = 'date'; di.value = tu.due; di.onchange = function(){ tu.due = di.value; };
+    tc.append(dl, di);
+    var tb = btn(t('give'), 'primary block', function(x){
+      if (!tu.master) { toast(t('choose_master'), true); return; }
+      act(x, 'portal_admin_task', {p_token:S.token, p_master:Number(tu.master), p_product:tu.product, p_qty:tu.qty, p_due:tu.due || null}, t('task_given'));
+    });
+    tb.style.marginTop = '12px'; tc.appendChild(tb);
+    w.appendChild(tc);
+  }
+
+  /* masters */
+  w.appendChild(section(t('masters'), masters.length || ''));
+  if (!masters.length) w.appendChild(empty(t('no_masters')));
+  else { var ml = el('ul', 'list'); masters.forEach(function(m){
+    var li = el('li', 'item'); var top = el('div', 'top'); top.appendChild(el('span', 'pill', m.employment));
+    if (Number(m.defect_pct) > 10) top.appendChild(el('span', 'pill bad', t('rejected') + ' ' + m.defect_pct + '%'));
+    li.append(top, el('div', 'title', m.name), el('div', 'sub', t('m_line', {a:fmt(m.accepted), p:fmt(m.to_pay), d:m.defect_pct, w:fmt(m.wool_g)})));
+    ml.appendChild(li); }); w.appendChild(ml); }
+
+  /* open tasks */
+  w.appendChild(section(t('open_tasks'), (d.tasks || []).length || ''));
+  if (!(d.tasks || []).length) w.appendChild(empty(t('no_tasks')));
+  else { var ol = el('ul', 'list'); d.tasks.forEach(function(x){
+    var li = el('li', 'item'); var top = el('div', 'top'); top.appendChild(el('span', '', x.master)); if (x.due) top.appendChild(el('span', '', t('due', {d:x.due})));
+    li.append(top, el('div', 'title', pname(x.product_code) + ' — ' + t('done_of', {d:x.done_qty, q:x.qty})));
+    var bar = el('div', 'bar-p'); var i = el('i'); i.style.width = Math.min(100, Math.round(100 * x.done_qty / Math.max(1, x.qty))) + '%'; bar.appendChild(i); li.appendChild(bar);
+    ol.appendChild(li); }); w.appendChild(ol); }
+
+  if (standalone) pinBlock(w);
+}
+
+function masterSelect(masters, val, onChange){
+  var s = el('select', 't'); var o0 = el('option', '', t('choose_master')); o0.value = ''; s.appendChild(o0);
+  masters.forEach(function(m){ var o = el('option', '', m.name); o.value = String(m.id); if (String(val) === String(m.id)) o.selected = true; s.appendChild(o); });
+  s.onchange = function(){ onChange(s.value); }; return s;
+}
+function stepperBig(val, min, max, step, onChange){
+  var box = el('div', 'stepper');
+  var minus = el('button', '', '−'); minus.type = 'button';
+  var inp = el('input'); inp.type = 'number'; inp.inputMode = 'numeric'; inp.value = val; inp.style.width = '130px';
+  var plus = el('button', '', '+'); plus.type = 'button';
+  function set(v){ v = Math.max(min, Math.min(max, parseInt(v, 10) || min)); inp.value = v; onChange(v); }
+  minus.onclick = function(){ set(Number(inp.value) - step); }; plus.onclick = function(){ set(Number(inp.value) + step); }; inp.onchange = function(){ set(inp.value); };
+  box.append(minus, inp, plus); return box;
+}
+
+function qcCard(b){
+  var st = S.ui['qc' + b.id] || (S.ui['qc' + b.id] = {a:b.qty, r:0, x:0, fault:'мастер', reason:''});
+  var c = el('div', 'card');
+  var top = el('div', 'top'); top.className = 'top note'; top.textContent = b.at + (b.note ? ' · ' + b.note : '');
+  c.append(top, el('div', 'title', b.master + ' — ' + pname(b.product_code) + ' × ' + b.qty));
+  c.appendChild(el('div', 'note', t('qc_lead', {q:b.qty})));
+  var g = el('div', 'qc');
+  [['a', t('accepted'), 'ok'], ['r', t('rework'), 'rw'], ['x', t('rejected'), 'bd']].forEach(function(f){
+    var cell = el('div', 'cell ' + f[2]); cell.appendChild(el('div', 'l', f[1]));
+    var mini = el('div', 'mini');
+    var m = el('button', '', '−'); m.type = 'button'; var v = el('span', '', st[f[0]]); var p = el('button', '', '+'); p.type = 'button';
+    m.onclick = function(){ if (st[f[0]] > 0) { st[f[0]]--; if (f[0] !== 'a' && st.a < b.qty) st.a++; render(); } };
+    p.onclick = function(){ var sum = st.a + st.r + st.x; if (f[0] === 'a') { if (sum < b.qty) st.a++; } else if (st.a > 0) { st[f[0]]++; st.a--; } else if (sum < b.qty) st[f[0]]++; render(); };
+    mini.append(m, v, p); cell.appendChild(mini); g.appendChild(cell);
+  });
+  c.appendChild(g);
+  if (st.r + st.x > 0) {
+    if (st.x > 0) {
+      c.appendChild(el('label', 'f', t('fault')));
+      var seg = el('div', 'seg');
+      [['мастер', t('f_master')], ['материал', t('f_material')], ['не определено', t('f_unknown')]].forEach(function(o){ var bb = el('button', st.fault === o[0] ? 'on' : '', o[1]); bb.type = 'button'; bb.onclick = function(){ st.fault = o[0]; render(); }; seg.appendChild(bb); });
+      c.appendChild(seg);
+    }
+    c.appendChild(el('label', 'f', t('reason')));
+    var ri = el('input', 't'); ri.placeholder = t('reason_need'); ri.value = st.reason; ri.oninput = function(){ st.reason = ri.value; };
+    c.appendChild(ri);
+  }
+  var sv = btn(t('save'), 'primary block', function(x){
+    if (st.a + st.r + st.x !== b.qty) { toast(t('sum_bad', {q:b.qty}), true); return; }
+    if (st.r + st.x > 0 && !st.reason.trim()) { toast(t('reason_req'), true); return; }
+    act(x, 'portal_admin_inspect', {p_token:S.token, p_batch:b.id, p_accepted:st.a, p_rework:st.r, p_rejected:st.x, p_fault:st.fault, p_reason:st.reason}, t('qc_saved'))
+      .then(function(r){ if (r && r.ok !== false) delete S.ui['qc' + b.id]; });
+  });
+  sv.style.marginTop = '12px'; c.appendChild(sv);
+  return c;
+}
+
+/* ---------- MANAGER ---------- */
+var TABS = [['today','Сегодня'],['workshop','Цех'],['agents','Агенты'],['people','Люди'],['docs','Документы и события']];
+function renderManager(w, d){
+  var k = d.kpi || {};
+  w.appendChild(el('h1', '', 'Пульт Qalima'));
+  w.appendChild(el('p', 'lead', 'Обновлено ' + (d.now || '') + ' · этап: ' + (k.launch_stage || '—')));
+  var tabs = el('div', 'tabs');
+  TABS.forEach(function(x){ var b = el('button', 'chip' + (S.tab === x[0] ? ' on' : ''), x[1]); b.type = 'button'; b.onclick = function(){ S.tab = x[0]; render(); }; tabs.appendChild(b); });
+  w.appendChild(tabs);
+  if (S.tab === 'today') mgrToday(w, d);
+  else if (S.tab === 'workshop') { S.lang = 'ru'; renderAdmin(w, d.workshop || {}, false); }
+  else if (S.tab === 'agents') mgrAgents(w, d);
+  else if (S.tab === 'people') mgrPeople(w, d);
+  else mgrDocs(w, d);
+  if (S.tab === 'today') pinBlock(w);
+}
+function mgrToday(w, d){
+  var k = d.kpi || {};
+  var kp = el('div', 'kpis');
+  [['Мастерицы', fmt(k.masters_contracted) + ' из ' + fmt(k.masters_target)], ['Склад, шт.', fmt(k.stock_units)], ['Предзаказы, шт.', fmt(k.preorder_units)],
+   ['Ждут решения', fmt(k.approvals_pending)], ['Выручка месяца, ₸', fmt(k.revenue_month)], ['Итог денег, ₸', fmt(k.cash_result)]].forEach(function(x){
+    var c = el('div', 'kpi'); c.append(el('div', 'v', x[1]), el('div', 'l', x[0])); kp.appendChild(c); });
+  w.appendChild(kp);
+
+  w.appendChild(section('Ждёт вашего решения', (d.approvals || []).length));
+  if (!(d.approvals || []).length) w.appendChild(empty('Очередь пуста.'));
+  else { var ul = el('ul', 'list'); d.approvals.forEach(function(a){
+    var li = el('li', 'item'); var top = el('div', 'top'); top.append(el('span', 'pill gold', a.kind), el('span', '', '№' + a.id + ' · ' + a.requested_by + ' · ' + a.created));
+    li.append(top, el('div', 'title', a.title));
+    if (a.summary) { var det = el('details', 'how'); det.appendChild(el('summary', '', 'Подробнее')); det.appendChild(el('div', 'how-body', a.summary)); li.appendChild(det); }
+    var acts = el('div', 'acts');
+    if (a.link) { var lk = el('a', 'btn small', 'Открыть'); lk.href = a.link; lk.target = '_blank'; lk.rel = 'noopener'; acts.appendChild(lk); }
+    acts.append(btn('Одобрить', 'small primary', function(x){ act(x, 'portal_approval', {p_token:S.token, p_id:a.id, p_decision:'одобрено'}, 'Одобрено · агенту +1 000'); }),
+                btn('Отклонить', 'small danger', function(x){ act(x, 'portal_approval', {p_token:S.token, p_id:a.id, p_decision:'отклонено'}, 'Отклонено · агенту −3 000'); }));
+    li.appendChild(acts); ul.appendChild(li); }); w.appendChild(ul); }
+
+  w.appendChild(section('Мои дела', (d.tasks || []).length));
+  if (!(d.tasks || []).length) w.appendChild(empty('Открытых дел нет.'));
+  else { var tl = el('ul', 'list'); d.tasks.forEach(function(x){
+    var li = el('li', 'item'); var top = el('div', 'top'); top.append(el('span', 'pill' + (x.overdue ? ' bad' : ''), x.kind), el('span', '', (x.overdue ? 'просрочено · ' : '') + x.due + ' · ' + x.created_by));
+    li.append(top, el('div', 'title', x.title));
+    if (x.how) { var det = el('details', 'how'); det.appendChild(el('summary', '', 'Как сделать — пошагово')); det.appendChild(el('div', 'how-body', x.how));
+      if (x.done_when) det.appendChild(el('div', 'how-body note', 'Готово, когда: ' + x.done_when)); li.appendChild(det); }
+    var acts = el('div', 'acts'); acts.appendChild(btn('Сделано', 'small primary', function(b){ act(b, 'portal_task_done', {p_token:S.token, p_id:x.id}, 'Отмечено'); }));
+    li.appendChild(acts); tl.appendChild(li); }); w.appendChild(tl); }
+}
+
+function mgrAgents(w, d){
+  w.appendChild(el('p', 'lead', 'Виртуальная зарплата агентов за текущий месяц. Каждый агент перед работой читает свою ведомость и последние замечания. Штрафы и премии ставятся автоматически (ошибки запусков, ваши «Одобрить/Отклонить», сделки, дошедшие до оплаты) и вашими оценками ниже.'));
+  var wrap = el('div', 'scroll-x'); var tb = el('table', 'tb');
+  var th = el('tr'); ['Агент','Уровень','Оклад','Премии','Штрафы','Итог','%','Вывод',''].forEach(function(h){ th.appendChild(el('th', '', h)); });
+  var thead = el('thead'); thead.appendChild(th); tb.appendChild(thead);
+  var tbody = el('tbody');
+  (d.payroll || []).forEach(function(p){
+    var tr = el('tr');
+    var n = el('td'); n.appendChild(el('div', '', p.agent)).style.fontWeight = '600'; n.appendChild(el('div', 'note', (p.title || '') + ' · запусков ' + p.runs_ok + (Number(p.runs_bad) ? ' / сбоев ' + p.runs_bad : '') + (p.last_run ? ' · ' + p.last_run : '')));
+    tr.appendChild(n);
+    tr.appendChild(el('td', '', p.level_name));
+    tr.appendChild(el('td', 'num', fmt(p.base)));
+    tr.appendChild(el('td', 'num', '+' + fmt(p.bonuses)));
+    tr.appendChild(el('td', 'num', '−' + fmt(p.penalties)));
+    tr.appendChild(el('td', 'num', fmt(p.total)));
+    tr.appendChild(el('td', 'num', p.pct + '%'));
+    var v = el('td', p.verdict === 'норма' ? '' : p.verdict === 'кандидат на повышение' ? 'verdict-ok' : p.verdict === 'на понижение' ? 'verdict-bad' : 'verdict-warn', p.verdict); tr.appendChild(v);
+    var a = el('td'); var row = el('div', 'acts'); row.style.marginTop = '0';
+    row.append(btn('👍', 'small', function(){ rateDialog(p.agent, 'премия'); }), btn('👎', 'small', function(){ rateDialog(p.agent, 'штраф'); }),
+      btn('↑', 'small', function(x){ act(x, 'portal_agent_level', {p_token:S.token, p_agent:p.agent, p_delta:1}, 'Уровень повышен'); }),
+      btn('↓', 'small', function(x){ act(x, 'portal_agent_level', {p_token:S.token, p_agent:p.agent, p_delta:-1}, 'Уровень понижен'); }));
+    a.appendChild(row); tr.appendChild(a); tbody.appendChild(tr);
+    if (S.ui.rate && S.ui.rate.agent === p.agent) {
+      var tr2 = el('tr'); var td = el('td'); td.colSpan = 9; td.appendChild(rateForm()); tr2.appendChild(td); tbody.appendChild(tr2);
+    }
+  });
+  tb.appendChild(tbody); wrap.appendChild(tb); w.appendChild(wrap);
+
+  var rules = el('details', 'how'); rules.style.marginTop = '14px'; rules.appendChild(el('summary', '', 'Правила зарплаты агентов'));
+  rules.appendChild(el('div', 'how-body', 'ШТРАФЫ: запуск с ошибкой −2 000 · частичный −500 · вы отклонили его предложение −3 000 · ваша оценка 👎 −5 000 (или своя сумма) · нарушение правил (обещал наличие, цена ниже минимальной, отправил без одобрения, потратил деньги) — ставьте 👎 −10 000.\nПРЕМИИ: вы одобрили его предложение +1 000 · ваша оценка 👍 +3 000 · сделка, найденная агентом, дошла до предоплаты/оплаты +10 000.\nИТОГ МЕСЯЦА: от 115% — кандидат на повышение · 85–115% — норма · 70–85% — предупреждение · ниже 70% — на понижение.\nУРОВНИ: 1 стажёр (оклад 100 000) → 2 специалист (130 000) → 3 старший (160 000). Повышение = больше доверия: вы можете поручать старшему агенту больше самостоятельных действий.'));
+  w.appendChild(rules);
+
+  w.appendChild(section('Последние оценки'));
+  if (!(d.reviews || []).length) w.appendChild(empty('Оценок пока нет.'));
+  else { var ul = el('ul', 'list'); d.reviews.forEach(function(r){
+    var li = el('li', 'item'); var top = el('div', 'top'); top.append(el('span', 'pill ' + (r.kind === 'премия' ? 'ok' : 'bad'), (r.kind === 'премия' ? '+' : '−') + fmt(r.amount)), el('span', '', r.agent + ' · ' + r.at + ' · ' + r.source));
+    li.append(top, el('div', 'sub', r.reason)); ul.appendChild(li); }); w.appendChild(ul); }
+
+  w.appendChild(section('Журнал запусков'));
+  if (!(d.runs || []).length) w.appendChild(empty('Запусков пока нет.'));
+  else { var rl = el('ul', 'list'); d.runs.forEach(function(r){
+    var li = el('li', 'item'); var top = el('div', 'top'); top.append(el('span', 'pill ' + (r.status === 'ok' ? 'ok' : 'bad'), r.status), el('span', '', r.agent + ' · ' + r.at + (r.items ? ' · создано ' + r.items : '')));
+    li.append(top, el('div', 'sub', r.summary || r.error));
+    var acts = el('div', 'acts');
+    acts.append(btn('👍 Хорошо', 'small', function(){ rateDialog(r.agent, 'премия', 'Хороший запуск ' + r.at); }), btn('👎 Плохо', 'small', function(){ rateDialog(r.agent, 'штраф', 'Плохой запуск ' + r.at + ': '); }));
+    li.appendChild(acts); rl.appendChild(li); }); w.appendChild(rl); }
+}
+function rateDialog(agent, kind, reason){
+  S.ui.rate = {agent:agent, kind:kind, amount: kind === 'премия' ? 3000 : 5000, reason: reason || ''};
+  S.tab = 'agents'; render(); window.scrollTo({top:0, behavior:'smooth'});
+}
+function rateForm(){
+  var r = S.ui.rate; var c = el('div', 'card');
+  c.appendChild(el('div', 'title', (r.kind === 'премия' ? 'Премия: ' : 'Штраф: ') + r.agent));
+  c.appendChild(el('label', 'f', 'Сумма, ₸ (виртуальные)'));
+  var seg = el('div', 'seg');
+  (r.kind === 'премия' ? [1000, 3000, 5000, 10000] : [2000, 5000, 10000, 20000]).forEach(function(v){ var b = el('button', r.amount === v ? 'on' : '', fmt(v)); b.type = 'button'; b.onclick = function(){ r.amount = v; render(); }; seg.appendChild(b); });
+  c.appendChild(seg);
+  c.appendChild(el('label', 'f', 'За что (агент прочитает это перед следующей работой)'));
+  var ta = el('textarea', 't'); ta.value = r.reason; ta.oninput = function(){ r.reason = ta.value; }; c.appendChild(ta);
+  var acts = el('div', 'acts');
+  acts.append(btn('Сохранить', 'primary', function(x){ if (!r.reason.trim()) { toast('Напишите, за что', true); return; }
+      act(x, 'portal_agent_rate', {p_token:S.token, p_agent:r.agent, p_kind:r.kind, p_amount:r.amount, p_reason:r.reason}, 'Записано').then(function(res){ if (res && res.ok !== false) { S.ui.rate = null; render(); } }); }),
+    btn('Отмена', '', function(){ S.ui.rate = null; render(); }));
+  c.appendChild(acts); return c;
+}
+
+function mgrPeople(w, d){
+  w.appendChild(el('p', 'lead', 'Здесь вы даёте доступ людям. Мастерица и администратор входят по номеру телефона и PIN-коду из 6 цифр. Новая мастерица сразу появляется в цехе.'));
+  var u = S.ui.user || (S.ui.user = {phone:'', name:'', role:'master', pin:'', active:true});
+  var c = el('div', 'card');
+  c.appendChild(el('div', 'title', u.editing ? 'Изменить: ' + u.name : 'Добавить человека'));
+  var ph = el('input', 't'); ph.type = 'tel'; ph.value = u.phone; ph.placeholder = '8 7__ ___ __ __'; ph.oninput = function(){ u.phone = ph.value; }; if (u.editing) ph.readOnly = true;
+  var nm = el('input', 't'); nm.value = u.name; nm.oninput = function(){ u.name = nm.value; };
+  c.append(el('label', 'f', 'Телефон'), ph, el('label', 'f', 'Имя'), nm, el('label', 'f', 'Роль'));
+  var seg = el('div', 'seg');
+  [['master','Мастерица'],['admin','Администратор'],['manager','Управляющий']].forEach(function(o){ var b = el('button', u.role === o[0] ? 'on' : '', o[1]); b.type = 'button'; b.onclick = function(){ u.role = o[0]; render(); }; seg.appendChild(b); });
+  c.appendChild(seg);
+  var pin = el('input', 't'); pin.inputMode = 'numeric'; pin.maxLength = 6; pin.value = u.pin; pin.oninput = function(){ u.pin = pin.value; };
+  c.append(el('label', 'f', u.editing ? 'Новый PIN (оставьте пустым, чтобы не менять)' : 'PIN (6 цифр) — сообщите человеку лично'), pin);
+  var gen = btn('Придумать PIN', 'small', function(){ var a = new Uint32Array(1); crypto.getRandomValues(a); u.pin = String(a[0] % 1000000).padStart(6, '0'); render(); });
+  gen.style.marginTop = '8px'; c.appendChild(gen);
+  if (u.editing) { var lb = el('label', 'f'); var cb = el('input'); cb.type = 'checkbox'; cb.checked = u.active; cb.onchange = function(){ u.active = cb.checked; }; lb.append(cb, document.createTextNode(' Доступ включён')); c.appendChild(lb); }
+  var acts = el('div', 'acts');
+  acts.appendChild(btn('Сохранить', 'primary', function(x){
+    act(x, 'portal_user_save', {p_token:S.token, p_phone:u.phone, p_name:u.name, p_role:u.role, p_pin:u.pin || null, p_active:u.active}, 'Сохранено. PIN: ' + (u.pin || 'без изменений'))
+      .then(function(r){ if (r && r.ok !== false) { S.ui.user = null; render(); } });
+  }));
+  if (u.editing) acts.appendChild(btn('Отмена', '', function(){ S.ui.user = null; render(); }));
+  c.appendChild(acts);
+  c.appendChild(el('p', 'note', 'Ссылку на сайт и PIN отправьте человеку в WhatsApp. После первого входа пусть сменит PIN внизу своего кабинета.'));
+  w.appendChild(c);
+
+  w.appendChild(section('Доступ к сайту', (d.users || []).length));
+  var ul = el('ul', 'list');
+  (d.users || []).forEach(function(x){
+    var li = el('li', 'item'); var top = el('div', 'top');
+    top.append(el('span', 'pill' + (x.active ? '' : ' bad'), {master:'мастерица', admin:'администратор', manager:'управляющий'}[x.role] + (x.active ? '' : ' · отключён')), el('span', '', '+' + x.phone + (x.last_login ? ' · входил ' + x.last_login : ' · ещё не входил')));
+    li.append(top, el('div', 'title', x.name));
+    var acts = el('div', 'acts'); acts.appendChild(btn('Изменить / новый PIN', 'small', function(){ S.ui.user = {phone:x.phone, name:x.name, role:x.role, pin:'', active:x.active, editing:true}; render(); window.scrollTo({top:0, behavior:'smooth'}); }));
+    li.appendChild(acts); ul.appendChild(li);
+  });
+  w.appendChild(ul);
+}
+
+function mgrDocs(w, d){
+  w.appendChild(section('Документы', (d.docs || []).length));
+  var ul = el('ul', 'list');
+  (d.docs || []).forEach(function(x){
+    var li = el('li', 'item'); var top = el('div', 'top'); top.append(el('span', 'pill', x.doc_type), el('span', 'pill ' + (x.status === 'проверен' || x.status === 'подписан' ? 'ok' : 'gold'), x.status));
+    li.append(top, el('div', 'title', x.title));
+    if (x.url) { var a = el('a', 'btn small', 'Открыть'); a.href = x.url; a.target = '_blank'; a.rel = 'noopener'; var ac = el('div', 'acts'); ac.appendChild(a); li.appendChild(ac); }
+    ul.appendChild(li);
+  });
+  w.appendChild(ul);
+  w.appendChild(section('Ближайшие события', (d.events || []).length));
+  var el2 = el('ul', 'list');
+  (d.events || []).forEach(function(x){
+    var li = el('li', 'item'); var top = el('div', 'top'); top.append(el('span', 'pill', x.kind), el('span', '', x.d.split('-').reverse().join('.') + (x.e ? ' — ' + x.e.split('-').reverse().join('.') : '')));
+    li.append(top, el('div', 'title', x.title)); if (x.note) li.appendChild(el('div', 'sub', x.note)); el2.appendChild(li);
+  });
+  w.appendChild(el2);
+}
+
+/* ---------- DEMO data (not saved anywhere) ---------- */
+var DEMO = (function(){
+  var M = [{id:1, name:'Айгерім', employment:'трудовой договор (надомный)', trained_products:['SHEEP','TAQIYA'], accepted:23, to_pay:31800, defect_pct:4.2, wool_g:1500, open_tasks:1},
+           {id:2, name:'Гүлнар', employment:'трудовой договор (надомный)', trained_products:['BAYPAQ'], accepted:6, to_pay:24000, defect_pct:0, wool_g:700, open_tasks:1},
+           {id:3, name:'Сәуле', employment:'стажёр', trained_products:['SHEEP'], accepted:9, to_pay:8800, defect_pct:12.5, wool_g:400, open_tasks:1}];
+  var pending = [{id:101, master:'Айгерім', product_code:'TAQIYA', qty:3, note:'56 өлшем', at:'07.11 10:20'}, {id:102, master:'Сәуле', product_code:'SHEEP', qty:5, note:'', at:'07.11 11:05'}];
+  var tasks = [{id:1, master:'Айгерім', product_code:'TAQIYA', qty:10, done_qty:6, due:'14.11', status:'в работе'}, {id:2, master:'Гүлнар', product_code:'BAYPAQ', qty:8, done_qty:6, due:'20.11', status:'в работе'}, {id:3, master:'Сәуле', product_code:'SHEEP', qty:30, done_qty:9, due:'21.11', status:'в работе'}];
+  var payroll = [
+    {agent:'Торговый представитель', title:'Магазины, опт, тендеры', level:2, level_name:'специалист', base:130000, bonuses:21000, penalties:3000, total:148000, pct:114, verdict:'норма', runs_ok:6, runs_bad:0, last_run:'07.11 12:41'},
+    {agent:'Агент продаж', title:'Сообщения, скрипты, звонки', level:1, level_name:'стажёр', base:100000, bonuses:8000, penalties:6000, total:102000, pct:102, verdict:'норма', runs_ok:5, runs_bad:0, last_run:'07.11 10:06'},
+    {agent:'Агент маркетинга', title:'Посты, reels, креативы', level:1, level_name:'стажёр', base:100000, bonuses:2000, penalties:21000, total:81000, pct:81, verdict:'предупреждение', runs_ok:3, runs_bad:1, last_run:'06.11 11:16'}];
+  var mgr = {name:'Ернарби', now:'07.11.2026 12:30', kpi:{launch_stage:'до запуска', masters_contracted:2, masters_target:3, stock_units:0, preorder_units:40, approvals_pending:2, revenue_month:0, cash_result:-48000},
+    tasks:[{id:7, kind:'документы', title:'Центр занятости: узнать условия субсидии', due:'12.11 12:00', created_by:'Claude', overdue:false, how:'1. Узнайте дату регистрации ИП…\n2. Позвоните в карьерный центр…', done_when:'Ответы центра записаны'}],
+    approvals:[{id:12, kind:'сообщение', title:'Тор. представитель: сувенирная лавка «Керуен»', summary:'Сәлеметсіз бе! …', link:'', requested_by:'Торговый представитель', created:'07.11 12:41'}],
+    payroll:payroll, reviews:[{agent:'Агент маркетинга', kind:'штраф', amount:10000, reason:'В посте написал «в наличии» до запуска', source:'Ернарби', at:'06.11 19:02'}],
+    runs:[{id:1, agent:'Торговый представитель', at:'07.11 12:41', status:'ok', summary:'8 целей: 5 магазинов в Туркестане, 2 отеля, 1 тендер', items:8, error:''}],
+    docs:[{id:7, doc_type:'договор', title:'Трудовой договор о надомной работе', status:'проверить бухгалтеру', url:''}],
+    events:[{d:'2026-11-17', e:'', title:'Тест кандидаток', kind:'производство', note:''}],
+    users:[{id:1, role:'manager', name:'Ернарби', phone:'77781773967', active:true, last_login:'07.11 12:30'}, {id:2, role:'admin', name:'Әсел', phone:'77000000000', active:true, last_login:''}]};
+  function admin(){ return {name:'Әсел', pending:pending, masters:M, tasks:tasks, wool_stock:[{item:'Шерсть для тақия и байпақ', unit:'г', qty:2400}, {item:'Шерсть меринос для овечек', unit:'г', qty:900}], wool_recent:[{master:'Айгерім', kind:'жүн', grams:600, d:'05.11'}], checked_today:4}; }
+  var master = {name:'Айгерім', pay:{accepted:23, rework:1, rejected_master_fault:1, rejected_not_master_fault:0, accrued:31800, deduction:0, to_pay:31800, defect_pct:4.2},
+    tasks:[{id:1, product_code:'TAQIYA', qty:10, done_qty:6, due:'14.11', status:'в работе'}], pending:[{id:101, product_code:'TAQIYA', qty:3, at:'07.11 10:20'}],
+    checked:[{product_code:'SHEEP', qty:12, accepted:11, rework:0, rejected:1, fault:'мастер', reason:'бүйірінде тесік бар', d:'05.11'}, {product_code:'TAQIYA', qty:6, accepted:6, rework:0, rejected:0, fault:'не определено', reason:'', d:'04.11'}],
+    wool:[{kind:'жүн', grams:600, d:'05.11', note:''}, {kind:'меринос', grams:300, d:'01.11', note:''}],
+    rates:[{product_code:'SHEEP', rate:1100}, {product_code:'TAQIYA', rate:2500}, {product_code:'BAYPAQ', rate:4000}]};
+  function rpc(fn, a){
+    if (fn === 'portal_master_home') return master;
+    if (fn === 'portal_admin_home') return admin();
+    if (fn === 'portal_manager_home') { mgr.workshop = admin(); return mgr; }
+    if (fn === 'portal_master_submit') { master.pending.unshift({id:Date.now(), product_code:a.p_product, qty:a.p_qty, at:'сейчас'}); return {ok:true}; }
+    if (fn === 'portal_master_cancel') { master.pending = master.pending.filter(function(x){ return x.id !== a.p_batch; }); return {ok:true}; }
+    if (fn === 'portal_admin_inspect') { pending = pending.filter(function(x){ return x.id !== a.p_batch; }); return {ok:true}; }
+    if (fn === 'portal_approval') { mgr.approvals = mgr.approvals.filter(function(x){ return x.id !== a.p_id; }); return {ok:true}; }
+    if (fn === 'portal_task_done') { mgr.tasks = mgr.tasks.filter(function(x){ return x.id !== a.p_id; }); return {ok:true}; }
+    if (fn === 'portal_agent_rate') { mgr.reviews.unshift({agent:a.p_agent, kind:a.p_kind, amount:a.p_amount, reason:a.p_reason, source:'Ернарби', at:'сейчас'}); return {ok:true}; }
+    return {ok:true};
+  }
+  return {rpc:rpc, names:{master:'Айгерім', admin:'Әсел', manager:'Ернарби'}};
+})();
+
+/* ---------- boot ---------- */
+if (location.hash === '#demo') startDemoPicker();
+else if (S.token && S.role) start();
+else renderLogin();
+})();
+</script>
+</body>
+</html>
