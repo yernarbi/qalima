@@ -63,6 +63,12 @@ h2 .count{font-size:14px;font-weight:600;color:var(--muted)}
 .prod .n{font-weight:700}
 .prod .p{font-size:13px;color:var(--muted)}
 .prod.on{border-color:var(--accent);background:var(--accent-soft)}
+.sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;margin:6px 0 4px}
+.sizes button{min-height:52px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:700;font-size:17px;line-height:1.1;padding:4px 2px}
+.sizes button small{display:block;font-weight:500;font-size:11px;color:var(--muted)}
+.sizes button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.sizes button.on small{color:var(--accent-ink)}
+.sz-h{font-size:14px;font-weight:600;color:var(--muted);margin-top:8px}
 .stepper{display:flex;align-items:center;gap:10px;justify-content:center;margin:10px 0}
 .stepper button{width:56px;height:56px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-size:28px;font-weight:600;cursor:pointer}
 .stepper input{width:90px;height:56px;text-align:center;font-size:28px;font-weight:700;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
@@ -163,7 +169,9 @@ var T = {
   task_give:'Шеберге тапсырма беру', product:'Бұйым', due_date:'Мерзімі', task_given:'Тапсырма берілді',
   masters:'Шеберлер', m_line:'Осы ай: {a} қабылданды · {p} ₸ · ақау {d}% · жүн {w} г',
   open_tasks:'Ашық тапсырмалар', no_masters:'Шеберлер әлі қосылмаған. Басқарушы қосады.',
-  recent_wool:'Соңғы берілген жүн', choose_master:'— шеберді таңдаңыз —'
+  recent_wool:'Соңғы берілген жүн', choose_master:'— шеберді таңдаңыз —',
+  size:'Өлшем', size_l:'өлшем', kids:'Балаларға', adults:'Ересектерге', any_size:'Кез келген өлшем', choose_size:'Өлшемді таңдаңыз',
+  foot:'табан {c}', head_hint:'Бас айналымы, см', shoe_hint:'Аяқ киім өлшемі (табан ұзындығы, см)', stock_sizes:'Қойма — өлшем бойынша', no_stock:'Қоймада әзірге бұйым жоқ.'
  },
  ru: {
   role_master:'Кабинет мастерицы', role_admin:'Кабинет администратора', role_manager:'Управляющий',
@@ -195,7 +203,9 @@ var T = {
   task_give:'Дать задание мастерице', product:'Изделие', due_date:'Срок', task_given:'Задание выдано',
   masters:'Мастерицы', m_line:'Месяц: принято {a} · {p} ₸ · брак {d}% · шерсть {w} г',
   open_tasks:'Открытые задания', no_masters:'Мастерицы ещё не добавлены. Их добавляет управляющий.',
-  recent_wool:'Последние выдачи шерсти', choose_master:'— выберите мастерицу —'
+  recent_wool:'Последние выдачи шерсти', choose_master:'— выберите мастерицу —',
+  size:'Размер', size_l:'размер', kids:'Детские', adults:'Взрослые', any_size:'Любой размер', choose_size:'Выберите размер',
+  foot:'стопа {c}', head_hint:'Обхват головы, см', shoe_hint:'Размер обуви (длина стопы, см)', stock_sizes:'Склад по размерам', no_stock:'На складе пока нет изделий.'
  }
 };
 var PROD = {
@@ -218,6 +228,29 @@ function el(tag, cls, text){ var n = document.createElement(tag); if (cls) n.cla
 function t(key, vars){ var s = (T[S.lang] && T[S.lang][key]) || T.ru[key] || key; if (vars) Object.keys(vars).forEach(function(k){ s = s.split('{'+k+'}').join(vars[k]); }); return s; }
 function fmt(v){ return new Intl.NumberFormat('ru-RU').format(Math.round(Number(v) || 0)).replace(/[  ]/g, ' '); }
 function pname(code){ return (PROD[code] && PROD[code][S.lang]) || code; }
+function pfull(code, size){ return pname(code) + (size ? ' · ' + t('size_l') + ' ' + size : ''); }
+function sizePicker(list, cur, onPick, allowAny, code){
+  var box = el('div');
+  if (allowAny) { var any = el('button', 'chip' + (!cur ? ' on' : ''), t('any_size')); any.type = 'button'; any.onclick = function(){ onPick(''); }; any.style.marginBottom = '6px'; box.appendChild(any); }
+  box.appendChild(el('div', 'note', code === 'TAQIYA' ? t('head_hint') : t('shoe_hint')));
+  ['детский','взрослый'].forEach(function(g){
+    var items = (list || []).filter(function(x){ return x.group === g; });
+    if (!items.length) return;
+    box.appendChild(el('div', 'sz-h', g === 'детский' ? t('kids') : t('adults')));
+    var grid = el('div', 'sizes');
+    items.forEach(function(x){
+      var b = el('button', cur === x.size ? 'on' : ''); b.type = 'button';
+      b.appendChild(document.createTextNode(x.size));
+      var hint = code === 'BAYPAQ' ? t('foot', {c: String(x.cm).replace('.', ',')}) : (x.note ? x.note.replace(/года|год|лет/, 'жас') : '');
+      if (code === 'TAQIYA' && S.lang === 'ru') hint = x.note || '';
+      if (hint) b.appendChild(el('small', '', hint));
+      b.onclick = function(){ onPick(x.size); };
+      grid.appendChild(b);
+    });
+    box.appendChild(grid);
+  });
+  return box;
+}
 function btn(label, cls, fn){ var b = el('button', 'btn' + (cls ? ' ' + cls : ''), label); b.type = 'button'; if (fn) b.addEventListener('click', function(){ fn(b); }); return b; }
 function toast(msg, bad){ var n = $('toast'); n.textContent = msg; n.className = 'toast' + (bad ? ' bad' : ''); n.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function(){ n.hidden = true; }, 2800); }
 function section(title, count){ var h = el('h2', '', title); if (count !== undefined) h.appendChild(el('span', 'count', count)); return h; }
@@ -250,6 +283,7 @@ function act(b, fn, args, okMsg){
 function errText(res){
   if (res.error === 'sum') return t('sum_bad', {q: res.qty});
   if (res.error === 'reason') return t('reason_req');
+  if (res.error === 'size') return t('choose_size');
   if (res.error === 'pin_format') return S.lang === 'kk' ? 'PIN 6 саннан тұруы керек.' : 'PIN должен состоять из 6 цифр.';
   if (res.error === 'bad_old') return S.lang === 'kk' ? 'Ескі PIN қате.' : 'Старый PIN неверный.';
   if (res.error === 'phone') return 'Номер: 8 7XX XXX XX XX';
@@ -356,7 +390,7 @@ function renderMaster(w, d, ro){
   hero.appendChild(row); w.appendChild(hero);
 
   /* submit */
-  var ui = S.ui.sub || (S.ui.sub = {open:false, product:null, qty:1, note:''});
+  var ui = S.ui.sub || (S.ui.sub = {open:false, product:null, size:'', qty:1, note:''});
   if (ro) {
     var rb = btn(t('submit_big'), 'gold block'); rb.disabled = true; w.appendChild(rb);
   } else if (!ui.open) {
@@ -369,10 +403,12 @@ function renderMaster(w, d, ro){
     ['TAQIYA','BAYPAQ','SHEEP'].forEach(function(code){
       var b = el('button', 'prod' + (ui.product === code ? ' on' : '')); b.type = 'button';
       b.append(svgIcon(code), el('div', 'n', pname(code)), el('div', 'p', fmt(rates[code]) + ' ₸'));
-      b.onclick = function(){ ui.product = code; render(); };
+      b.onclick = function(){ if (ui.product !== code) ui.size = ''; ui.product = code; render(); };
       g.appendChild(b);
     });
     c.appendChild(g);
+    var szl = ui.product && d.sizes && d.sizes[ui.product];
+    if (szl && szl.length) { c.appendChild(el('label', 'f', t('size'))); c.appendChild(sizePicker(szl, ui.size, function(v){ ui.size = v; render(); }, false, ui.product)); }
     c.appendChild(el('label', 'f', t('qty')));
     c.appendChild(stepper(ui.qty, function(v){ ui.qty = v; }, 1, 200));
     var nl = el('label', 'f', t('note_opt')); var ni = el('input', 't'); ni.value = ui.note; ni.oninput = function(){ ui.note = ni.value; };
@@ -380,8 +416,10 @@ function renderMaster(w, d, ro){
     var acts = el('div', 'acts');
     var sb = btn(t('submit'), 'primary', function(b){
       if (!ui.product) { toast(t('choose'), true); return; }
-      act(b, 'portal_master_submit', {p_token:S.token, p_product:ui.product, p_qty:ui.qty, p_note:ui.note}, t('submitted'))
-        .then(function(r){ if (r && r.ok !== false) { S.ui.sub = {open:false, product:null, qty:1, note:''}; render(); } });
+      var need = d.sizes && d.sizes[ui.product] && d.sizes[ui.product].length;
+      if (need && !ui.size) { toast(t('choose_size'), true); return; }
+      act(b, 'portal_master_submit', {p_token:S.token, p_product:ui.product, p_qty:ui.qty, p_note:ui.note, p_size: need ? ui.size : null}, t('submitted'))
+        .then(function(r){ if (r && r.ok !== false) { S.ui.sub = {open:false, product:null, size:'', qty:1, note:''}; render(); } });
     });
     sb.style.flex = '1';
     acts.append(sb, btn(t('cancel'), '', function(){ ui.open = false; render(); }));
@@ -396,7 +434,7 @@ function renderMaster(w, d, ro){
     d.pending.forEach(function(b){
       var li = el('li', 'item');
       var top = el('div', 'top'); top.append(el('span', 'pill gold', t('waiting')), el('span', '', b.at));
-      li.append(top, el('div', 'title', pname(b.product_code) + ' — ' + b.qty));
+      li.append(top, el('div', 'title', pfull(b.product_code, b.size) + ' — ' + b.qty));
       if (!ro) { var a = el('div', 'acts'); a.appendChild(btn(t('withdraw'), 'small danger', function(x){ act(x, 'portal_master_cancel', {p_token:S.token, p_batch:b.id}, t('withdrawn')); })); li.appendChild(a); }
       ul.appendChild(li);
     });
@@ -409,7 +447,7 @@ function renderMaster(w, d, ro){
   else { var tl = el('ul', 'list'); d.tasks.forEach(function(x){
     var li = el('li', 'item');
     var top = el('div', 'top'); if (x.due) top.appendChild(el('span', '', t('due', {d:x.due})));
-    li.append(top, el('div', 'title', pname(x.product_code) + ' — ' + x.qty), el('div', 'sub', t('done_of', {d:x.done_qty, q:x.qty})));
+    li.append(top, el('div', 'title', pfull(x.product_code, x.size) + ' — ' + x.qty), el('div', 'sub', t('done_of', {d:x.done_qty, q:x.qty})));
     var bar = el('div', 'bar-p'); var i = el('i'); i.style.width = Math.min(100, Math.round(100 * x.done_qty / Math.max(1, x.qty))) + '%'; bar.appendChild(i); li.appendChild(bar);
     tl.appendChild(li); }); w.appendChild(tl); }
 
@@ -422,7 +460,7 @@ function renderMaster(w, d, ro){
     if (x.accepted) top.appendChild(el('span', 'pill ok', t('accepted') + ' ' + x.accepted));
     if (x.rework) top.appendChild(el('span', 'pill gold', t('rework') + ' ' + x.rework));
     if (x.rejected) top.appendChild(el('span', 'pill bad', t('rejected') + ' ' + x.rejected + (x.fault === 'материал' ? ' · ' + t('f_material') : x.fault === 'мастер' ? ' · ' + t('f_master') : '')));
-    li.append(top, el('div', 'title', pname(x.product_code) + ' — ' + x.qty));
+    li.append(top, el('div', 'title', pfull(x.product_code, x.size) + ' — ' + x.qty));
     if (x.reason) li.appendChild(el('div', 'sub', t('reason') + ': ' + x.reason));
     cl.appendChild(li); }); w.appendChild(cl); }
 
@@ -530,23 +568,44 @@ function renderAdmin(w, d, standalone){
   /* task give */
   if (masters.length) {
     w.appendChild(section(t('task_give')));
-    var tu = S.ui.task || (S.ui.task = {master:'', product:'SHEEP', qty:10, due:todayISO(7)});
+    var tu = S.ui.task || (S.ui.task = {master:'', product:'SHEEP', size:'', qty:10, due:todayISO(7)});
     var tc = el('div', 'card');
     tc.append(el('label', 'f', t('master')), masterSelect(masters, tu.master, function(v){ tu.master = v; }));
     tc.appendChild(el('label', 'f', t('product')));
     var seg3 = el('div', 'seg');
-    ['TAQIYA','BAYPAQ','SHEEP'].forEach(function(code){ var b = el('button', tu.product === code ? 'on' : '', pname(code)); b.type = 'button'; b.onclick = function(){ tu.product = code; render(); }; seg3.appendChild(b); });
+    ['TAQIYA','BAYPAQ','SHEEP'].forEach(function(code){ var b = el('button', tu.product === code ? 'on' : '', pname(code)); b.type = 'button'; b.onclick = function(){ if (tu.product !== code) tu.size = ''; tu.product = code; render(); }; seg3.appendChild(b); });
     tc.appendChild(seg3);
+    var tsz = d.sizes && d.sizes[tu.product];
+    if (tsz && tsz.length) { tc.appendChild(el('label', 'f', t('size'))); tc.appendChild(sizePicker(tsz, tu.size, function(v){ tu.size = v; render(); }, true, tu.product)); }
     tc.appendChild(el('label', 'f', t('qty')));
     tc.appendChild(stepper(tu.qty, function(v){ tu.qty = v; }, 1, 500));
     var dl = el('label', 'f', t('due_date')); var di = el('input', 't'); di.type = 'date'; di.value = tu.due; di.onchange = function(){ tu.due = di.value; };
     tc.append(dl, di);
     var tb = btn(t('give'), 'primary block', function(x){
       if (!tu.master) { toast(t('choose_master'), true); return; }
-      act(x, 'portal_admin_task', {p_token:S.token, p_master:Number(tu.master), p_product:tu.product, p_qty:tu.qty, p_due:tu.due || null}, t('task_given'));
+      act(x, 'portal_admin_task', {p_token:S.token, p_master:Number(tu.master), p_product:tu.product, p_qty:tu.qty, p_due:tu.due || null, p_size: tu.size || null}, t('task_given'));
     });
     tb.style.marginTop = '12px'; tc.appendChild(tb);
     w.appendChild(tc);
+  }
+
+  /* stock by sizes */
+  w.appendChild(section(t('stock_sizes')));
+  var ss = d.stock_sizes || [], sn = d.stock_nosize || [];
+  if (!ss.length && !sn.length) w.appendChild(empty(t('no_stock')));
+  else {
+    var stc = el('div', 'card');
+    ['TAQIYA','BAYPAQ','SHEEP'].forEach(function(code){
+      var rows = ss.filter(function(x){ return x.product_code === code; });
+      var ns = sn.filter(function(x){ return x.product_code === code; });
+      if (!rows.length && !ns.length) return;
+      var total = 0; rows.forEach(function(x){ total += Number(x.available); }); ns.forEach(function(x){ total += Number(x.available); });
+      stc.appendChild(el('div', 'title', pname(code) + ' — ' + fmt(total)));
+      var line = rows.map(function(x){ return x.size + ': ' + x.available; }).join(' · ');
+      if (ns.length && rows.length) line += ' · ' + (S.lang === 'kk' ? 'өлшемсіз' : 'без размера') + ': ' + ns[0].available;
+      if (line) stc.appendChild(el('div', 'note', line));
+    });
+    w.appendChild(stc);
   }
 
   /* masters */
@@ -563,7 +622,7 @@ function renderAdmin(w, d, standalone){
   if (!(d.tasks || []).length) w.appendChild(empty(t('no_tasks')));
   else { var ol = el('ul', 'list'); d.tasks.forEach(function(x){
     var li = el('li', 'item'); var top = el('div', 'top'); top.appendChild(el('span', '', x.master)); if (x.due) top.appendChild(el('span', '', t('due', {d:x.due})));
-    li.append(top, el('div', 'title', pname(x.product_code) + ' — ' + t('done_of', {d:x.done_qty, q:x.qty})));
+    li.append(top, el('div', 'title', pfull(x.product_code, x.size) + ' — ' + t('done_of', {d:x.done_qty, q:x.qty})));
     var bar = el('div', 'bar-p'); var i = el('i'); i.style.width = Math.min(100, Math.round(100 * x.done_qty / Math.max(1, x.qty))) + '%'; bar.appendChild(i); li.appendChild(bar);
     ol.appendChild(li); }); w.appendChild(ol); }
 
@@ -589,7 +648,7 @@ function qcCard(b){
   var st = S.ui['qc' + b.id] || (S.ui['qc' + b.id] = {a:b.qty, r:0, x:0, fault:'мастер', reason:''});
   var c = el('div', 'card');
   var top = el('div', 'top'); top.className = 'top note'; top.textContent = b.at + (b.note ? ' · ' + b.note : '');
-  c.append(top, el('div', 'title', b.master + ' — ' + pname(b.product_code) + ' × ' + b.qty));
+  c.append(top, el('div', 'title', b.master + ' — ' + pfull(b.product_code, b.size) + ' × ' + b.qty));
   c.appendChild(el('div', 'note', t('qc_lead', {q:b.qty})));
   var g = el('div', 'qc');
   [['a', t('accepted'), 'ok'], ['r', t('rework'), 'rw'], ['x', t('rejected'), 'bd']].forEach(function(f){
@@ -834,11 +893,14 @@ function mgrDocs(w, d){
 
 /* ---------- DEMO data (not saved anywhere) ---------- */
 var DEMO = (function(){
+  var SZ = {TAQIYA: [44,46,48,50,52].map(function(v,i){ return {size:String(v), group:'детский', cm:v, note:['≈ 1 год','≈ 1–2 года','≈ 2–4 года','≈ 4–7 лет','≈ 7–12 лет'][i]}; })
+                .concat([53,54,55,56,57,58,59,60,61,62].map(function(v){ return {size:String(v), group:'взрослый', cm:v, note:''}; })),
+            BAYPAQ: Array.from({length:26}, function(_, i){ var v = 20 + i; return {size:String(v), group: v <= 34 ? 'детский' : 'взрослый', cm: Math.round(((v/1.5) - 1.5)*2)/2, note:''}; })};
   var M = [{id:1, name:'Айгерім', employment:'трудовой договор (надомный)', trained_products:['SHEEP','TAQIYA'], accepted:23, to_pay:31800, defect_pct:4.2, wool_g:1500, open_tasks:1},
            {id:2, name:'Гүлнар', employment:'трудовой договор (надомный)', trained_products:['BAYPAQ'], accepted:6, to_pay:24000, defect_pct:0, wool_g:700, open_tasks:1},
            {id:3, name:'Сәуле', employment:'стажёр', trained_products:['SHEEP'], accepted:9, to_pay:8800, defect_pct:12.5, wool_g:400, open_tasks:1}];
-  var pending = [{id:101, master:'Айгерім', product_code:'TAQIYA', qty:3, note:'56 өлшем', at:'07.11 10:20'}, {id:102, master:'Сәуле', product_code:'SHEEP', qty:5, note:'', at:'07.11 11:05'}];
-  var tasks = [{id:1, master:'Айгерім', product_code:'TAQIYA', qty:10, done_qty:6, due:'14.11', status:'в работе'}, {id:2, master:'Гүлнар', product_code:'BAYPAQ', qty:8, done_qty:6, due:'20.11', status:'в работе'}, {id:3, master:'Сәуле', product_code:'SHEEP', qty:30, done_qty:9, due:'21.11', status:'в работе'}];
+  var pending = [{id:101, master:'Айгерім', product_code:'TAQIYA', size:'56', qty:3, note:'', at:'07.11 10:20'}, {id:102, master:'Сәуле', product_code:'SHEEP', size:'', qty:5, note:'', at:'07.11 11:05'}];
+  var tasks = [{id:1, master:'Айгерім', product_code:'TAQIYA', size:'56', qty:10, done_qty:6, due:'14.11', status:'в работе'}, {id:2, master:'Гүлнар', product_code:'BAYPAQ', size:'38', qty:8, done_qty:6, due:'20.11', status:'в работе'}, {id:3, master:'Сәуле', product_code:'SHEEP', qty:30, done_qty:9, due:'21.11', status:'в работе'}];
   var payroll = [
     {agent:'Торговый представитель', title:'Магазины, опт, тендеры', level:2, level_name:'специалист', base:130000, bonuses:21000, penalties:3000, total:148000, pct:114, verdict:'норма', runs_ok:6, runs_bad:0, last_run:'07.11 12:41'},
     {agent:'Агент продаж', title:'Сообщения, скрипты, звонки', level:1, level_name:'стажёр', base:100000, bonuses:8000, penalties:6000, total:102000, pct:102, verdict:'норма', runs_ok:5, runs_bad:0, last_run:'07.11 10:06'},
@@ -851,17 +913,17 @@ var DEMO = (function(){
     docs:[{id:7, doc_type:'договор', title:'Трудовой договор о надомной работе', status:'проверить бухгалтеру', url:''}],
     events:[{d:'2026-11-17', e:'', title:'Тест кандидаток', kind:'производство', note:''}],
     users:[{id:1, role:'manager', name:'Ернарби', phone:'77781773967', active:true, last_login:'07.11 12:30'}, {id:2, role:'admin', name:'Әсел', phone:'77000000000', active:true, last_login:''}]};
-  function admin(){ return {name:'Әсел', pending:pending, masters:M, tasks:tasks, wool_stock:[{item:'Шерсть для тақия и байпақ', unit:'г', qty:2400}, {item:'Шерсть меринос для овечек', unit:'г', qty:900}], wool_recent:[{master:'Айгерім', kind:'жүн', grams:600, d:'05.11'}], checked_today:4}; }
+  function admin(){ return {name:'Әсел', pending:pending, masters:M, tasks:tasks, wool_stock:[{item:'Шерсть для тақия и байпақ', unit:'г', qty:2400}, {item:'Шерсть меринос для овечек', unit:'г', qty:900}], wool_recent:[{master:'Айгерім', kind:'жүн', grams:600, d:'05.11'}], checked_today:4, sizes:SZ, stock_sizes:[{product_code:'TAQIYA', size:'48', age_group:'детский', available:4}, {product_code:'TAQIYA', size:'56', age_group:'взрослый', available:6}, {product_code:'BAYPAQ', size:'38', age_group:'взрослый', available:5}], stock_nosize:[{product_code:'SHEEP', available:11}]}; }
   var master = {name:'Айгерім', pay:{accepted:23, rework:1, rejected_master_fault:1, rejected_not_master_fault:0, accrued:31800, deduction:0, to_pay:31800, defect_pct:4.2},
-    tasks:[{id:1, product_code:'TAQIYA', qty:10, done_qty:6, due:'14.11', status:'в работе'}], pending:[{id:101, product_code:'TAQIYA', qty:3, at:'07.11 10:20'}],
-    checked:[{product_code:'SHEEP', qty:12, accepted:11, rework:0, rejected:1, fault:'мастер', reason:'бүйірінде тесік бар', d:'05.11'}, {product_code:'TAQIYA', qty:6, accepted:6, rework:0, rejected:0, fault:'не определено', reason:'', d:'04.11'}],
+    tasks:[{id:1, product_code:'TAQIYA', size:'56', qty:10, done_qty:6, due:'14.11', status:'в работе'}], pending:[{id:101, product_code:'TAQIYA', size:'56', qty:3, at:'07.11 10:20'}], sizes:SZ,
+    checked:[{product_code:'SHEEP', size:'', qty:12, accepted:11, rework:0, rejected:1, fault:'мастер', reason:'бүйірінде тесік бар', d:'05.11'}, {product_code:'TAQIYA', size:'48', qty:6, accepted:6, rework:0, rejected:0, fault:'не определено', reason:'', d:'04.11'}],
     wool:[{kind:'жүн', grams:600, d:'05.11', note:''}, {kind:'меринос', grams:300, d:'01.11', note:''}],
     rates:[{product_code:'SHEEP', rate:1100}, {product_code:'TAQIYA', rate:2500}, {product_code:'BAYPAQ', rate:4000}]};
   function rpc(fn, a){
     if (fn === 'portal_master_home' || fn === 'portal_master_view') return master;
     if (fn === 'portal_admin_home') return admin();
     if (fn === 'portal_manager_home') { mgr.workshop = admin(); return mgr; }
-    if (fn === 'portal_master_submit') { master.pending.unshift({id:Date.now(), product_code:a.p_product, qty:a.p_qty, at:'сейчас'}); return {ok:true}; }
+    if (fn === 'portal_master_submit') { master.pending.unshift({id:Date.now(), product_code:a.p_product, size:a.p_size || '', qty:a.p_qty, at:'сейчас'}); return {ok:true}; }
     if (fn === 'portal_master_cancel') { master.pending = master.pending.filter(function(x){ return x.id !== a.p_batch; }); return {ok:true}; }
     if (fn === 'portal_admin_inspect') { pending = pending.filter(function(x){ return x.id !== a.p_batch; }); return {ok:true}; }
     if (fn === 'portal_approval') { mgr.approvals = mgr.approvals.filter(function(x){ return x.id !== a.p_id; }); return {ok:true}; }
