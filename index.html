@@ -150,6 +150,17 @@ details.how[open] summary::before{content:"▾ "}
 .login .tag{text-align:center;color:var(--muted);margin-bottom:22px}
 .login .tag::after{content:"";display:block;width:132px;height:14px;margin:12px auto 0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 24'%3E%3Cpath d='M32 23V14M32 14c0-6-5-9-10-8s-6 8-1.5 9.5 5.5-1.5 4-4M32 14c0-6 5-9 10-8s6 8 1.5 9.5-5.5-1.5-4-4M0 23h64' fill='none' stroke='%23B8862F' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x center/44px 16px;opacity:.85}
 .err{color:var(--bad);font-weight:600;margin-top:10px;min-height:1.4em}
+.chat{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.msg{max-width:88%;padding:12px 14px;border-radius:18px;box-shadow:var(--shadow);white-space:pre-wrap;font-size:15.5px}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:6px}
+.msg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:6px}
+.msg .meta{font-size:12px;opacity:.75;margin-top:6px}
+.msg.wait{align-self:flex-start;background:var(--gold-soft);color:var(--ink);border:1px dashed var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.composer{position:sticky;bottom:10px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:10px;box-shadow:var(--shadow);display:flex;gap:8px;align-items:flex-end;margin-top:14px}
+.composer textarea{flex:1;border:0;resize:none;min-height:48px;max-height:180px;padding:10px;background:transparent;font-size:16px}
+.composer textarea:focus{outline:none}
+.composer .btn{border-radius:999px;min-height:48px}
 .demo-banner{background:var(--gold-soft);color:var(--gold);text-align:center;font-size:14px;padding:7px 10px;font-weight:600}
 
 .sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:8px;margin:6px 0 4px}
@@ -970,7 +981,7 @@ function qcCard(b){
 }
 
 /* ---------- MANAGER ---------- */
-var TABS = [['today','Сегодня'],['workshop','Цех'],['catalog','Каталог и склад'],['journal','Журнал'],['mview','Кабинет мастерицы'],['agents','Агенты'],['people','Люди'],['docs','Документы и события']];
+var TABS = [['today','Сегодня'],['assistant','✦ Агент'],['workshop','Цех'],['catalog','Каталог и склад'],['journal','Журнал'],['mview','Кабинет мастерицы'],['agents','Агенты'],['people','Люди'],['docs','Документы и события']];
 function renderManager(w, d){
   var k = d.kpi || {};
   w.appendChild(el('h1', '', 'Пульт Qalima'));
@@ -982,6 +993,7 @@ function renderManager(w, d){
   else if (S.tab === 'workshop') { S.lang = 'ru'; renderAdmin(w, d.workshop || {}, false); }
   else if (S.tab === 'mview') mgrMasterView(w, d);
   else if (S.tab === 'catalog') mgrCatalog(w);
+  else if (S.tab === 'assistant') mgrAssistant(w);
   else if (S.tab === 'journal') mgrJournal(w);
   else if (S.tab === 'agents') mgrAgents(w, d);
   else if (S.tab === 'people') mgrPeople(w, d);
@@ -1057,6 +1069,57 @@ function loadMv(){
     .catch(function(){ mv.loading = false; toast(t('net'), true); render(); });
 }
 
+
+
+/* ---------- MANAGER: assistant ---------- */
+function mgrAssistant(w){
+  var d = aux('portal_agent_requests', 'ag');
+  var hero = el('div', 'card hero');
+  hero.append(el('div', 'lbl', 'Агент Claude в вашем пульте'), el('div', 'big', 'Поручите словами'));
+  hero.appendChild(el('div', 'lbl', 'Пишите как человеку: «добавь товар…», «поправь остаток…», «удали задание…», «сколько на складе…». Агент выполнит в базе и ответит здесь. Деньги, рассылки и доступы людей он не трогает.'));
+  w.appendChild(hero);
+  var ex = ['Добавь товар Жайнамаз: цена 35 000, мастерице 6 000, шерсть 400 г, размеры 60x110 и 70x120',
+            'Поправь остаток: тақия 56 размер — 8 шт, пересчитали на складе',
+            'Удали последнее задание Айгерім',
+            'Сколько изделий на складе по размерам?',
+            'Дай Аружан задание: 5 тақия 54 и 3 байпақ 38, срок пятница, белая шерсть'];
+  var chips = el('div', 'chips');
+  ex.forEach(function(x){ var c = el('button', 'chip', x.length > 42 ? x.slice(0, 40) + '…' : x); c.type = 'button'; c.title = x; c.onclick = function(){ S.ui.ask = x; render(); var ta = document.getElementById('ask'); if (ta) ta.focus(); }; chips.appendChild(c); });
+  w.appendChild(chips);
+  if (!d) { w.appendChild(el('div', 'card', t('loading'))); }
+  else {
+    w.appendChild(el('p', 'note', d.last_run ? 'Агент последний раз проверял поручения: ' + d.last_run + '. Он проверяет их каждый час с 8:07 до 22:07.' : 'Агент ещё не запускался. Поручения сохраняются и будут выполнены при первом запуске.'));
+    var chat = el('div', 'chat');
+    (d.items || []).slice().reverse().forEach(function(x){
+      var me = el('div', 'msg me'); me.appendChild(document.createTextNode(x.text)); me.appendChild(el('div', 'meta', x.at)); chat.appendChild(me);
+      if (x.status === 'новое' || x.status === 'в работе') {
+        var wt = el('div', 'msg wait'); wt.appendChild(document.createTextNode(x.status === 'новое' ? '⏳ Ждёт агента (до часа)' : '⚙️ Агент выполняет…'));
+        if (x.status === 'новое') { var cb = btn('Отменить', 'small', function(b){ act(b, 'portal_agent_cancel', {p_token:S.token, p_id:x.id}, 'Отменено').then(function(){ AUX.ag = null; render(); }); }); cb.style.marginTop = '8px'; wt.appendChild(el('br')); wt.appendChild(cb); }
+        chat.appendChild(wt);
+      } else {
+        var ai = el('div', 'msg ai');
+        var badge = x.status === 'выполнено' ? '✓ ' : x.status === 'нужно уточнить' ? '? ' : '✕ ';
+        ai.appendChild(document.createTextNode(badge + (x.answer || x.status)));
+        ai.appendChild(el('div', 'meta', 'Агент · ' + x.done + (x.status === 'нужно уточнить' ? ' · ответьте новым сообщением' : '')));
+        chat.appendChild(ai);
+      }
+    });
+    if (!(d.items || []).length) chat.appendChild(empty('Здесь появится переписка с агентом.'));
+    w.appendChild(chat);
+  }
+  var comp = el('div', 'composer');
+  var ta = el('textarea'); ta.id = 'ask'; ta.rows = 2; ta.placeholder = 'Напишите поручение агенту…'; ta.value = S.ui.ask || '';
+  ta.oninput = function(){ S.ui.ask = ta.value; };
+  var send = btn('Отправить', 'primary', function(b){
+    var v = (S.ui.ask || '').trim(); if (!v) { toast('Напишите поручение', true); return; }
+    b.disabled = true;
+    rpc('portal_agent_ask', {p_token:S.token, p_text:v}).then(function(r){
+      if (!r || !r.ok) { b.disabled = false; toast(r && r.error === 'too_many' ? 'Слишком много поручений за час' : t('error'), true); return; }
+      S.ui.ask = ''; AUX.ag = null; toast('Поручение отправлено агенту'); render();
+    }).catch(function(){ b.disabled = false; toast(t('net'), true); });
+  });
+  comp.append(ta, send); w.appendChild(comp);
+}
 
 /* ---------- MANAGER: catalog & stock ---------- */
 var AUX = {};
@@ -1339,6 +1402,8 @@ function mgrDocs(w, d){
 
 /* ---------- DEMO data (not saved anywhere) ---------- */
 var DEMO = (function(){
+  var AGQ = [{id:2, text:'Поправь остаток: тақия 56 — 8 шт, пересчитали', status:'выполнено', answer:'Готово. Тақия, размер 56: было 6 шт, стало 8 шт (+2, «инвентаризация: пересчитали»). Видно во вкладке «Каталог и склад».', at:'08.11 12:40', done:'08.11 13:07'},
+             {id:1, text:'Добавь жайнамаз', status:'нужно уточнить', answer:'Какая розничная цена и сколько платить мастерице за 1 шт? Нужны ли размеры?', at:'08.11 11:55', done:'08.11 12:07'}];
   var CAT = [{code:'TAQIYA', ru:'Тақия', kk:'Тақия', price:15000, rate:2500, wool_g:60, for_masters:true, active:true, note:''}, {code:'BAYPAQ', ru:'Байпақ', kk:'Байпақ', price:25000, rate:4000, wool_g:100, for_masters:true, active:true, note:''}, {code:'SHEEP', ru:'Овечка', kk:'Қошақан', price:4900, rate:1100, wool_g:null, for_masters:false, active:true, note:''}];
   var SZ = {TAQIYA: [44,46,48,50,52].map(function(v,i){ return {size:String(v), group:'детский', cm:v, note:['≈ 1 год','≈ 1–2 года','≈ 2–4 года','≈ 4–7 лет','≈ 7–12 лет'][i]}; })
                 .concat([53,54,55,56,57,58,59,60,61,62].map(function(v){ return {size:String(v), group:'взрослый', cm:v, note:''}; })),
@@ -1373,6 +1438,9 @@ var DEMO = (function(){
     if (fn === 'portal_shift_start') { master.shift = {open:true, since:'10:40', open_min:0, today_min:0, month_days:7, month_hours:31.5}; ashift = {open:true, since:'10:40', open_min:0, today_min:0, month_days:6, month_hours:22}; return {ok:true}; }
     if (fn === 'portal_shift_end') { master.shift.open = false; ashift.open = false; return {ok:true}; }
     if (fn === 'portal_photos') return [];
+    if (fn === 'portal_agent_requests') return {last_run:'08.11 13:07', items:AGQ};
+    if (fn === 'portal_agent_ask') { AGQ.unshift({id:Date.now(), text:a.p_text, status:'новое', answer:'', at:'сейчас', done:''}); return {ok:true}; }
+    if (fn === 'portal_agent_cancel') { AGQ = AGQ.filter(function(x){ return x.id !== a.p_id; }); return {ok:true}; }
     if (fn === 'portal_mgr_catalog') return {catalog:CAT, sizes:SZ, stock:[{product_code:'TAQIYA', size:'48', qty:4},{product_code:'TAQIYA', size:'56', qty:6},{product_code:'BAYPAQ', size:'38', qty:5},{product_code:'TAQIYA', size:'', qty:0},{product_code:'BAYPAQ', size:'', qty:0}], wool:[{kind:'жүн', qty:2400},{kind:'меринос', qty:900}]};
     if (fn === 'portal_mgr_records') return {batches:[{id:101, master:'Айгерім', product_code:'TAQIYA', size:'56', qty:3, at:'07.11 10:20', qc_id:null, photos:2},{id:99, master:'Сәуле', product_code:'BAYPAQ', size:'38', qty:2, at:'06.11 15:10', qc_id:55, accepted:2, rework:0, rejected:0, photos:3}], tasks:tasks.map(function(x){ return {id:x.id, group_id:x.group_id > 0 ? x.group_id : null, master:x.master, product_code:x.product_code, size:x.size, qty:x.qty, done_qty:x.done_qty, status:x.status, due:x.due, comment:x.comment}; }), wool:[{id:1, master:'Айгерім', kind:'жүн', grams:600, at:'05.11 10:00', by:'Әсел'}], stock:[{id:1, product_code:'TAQIYA', size:'56', qty:6, reason:'приёмка ОТК', ref:'ОТК #55', at:'06.11 16:00'}], shifts:[{id:1, name:'Айгерім', start:'07.11 09:05', fin:'', auto_closed:false, hours:3.1}], my_tasks:mgr.tasks.map(function(x){ return {id:x.id, kind:x.kind, title:x.title, status:'открыта', due:x.due, created_by:x.created_by}; }), approvals:mgr.approvals.map(function(x){ return {id:x.id, kind:x.kind, title:x.title, status:'ждёт', requested_by:x.requested_by, at:x.created}; }), deleted:[]};
     if (fn === 'portal_mgr_product_save') { var code = a.p_code || ('P' + (CAT.length)); var ex = CAT.filter(function(x){ return x.code === code; })[0]; var obj = {code:code, ru:a.p_name_ru, kk:a.p_name_kk || a.p_name_ru, price:a.p_price, rate:a.p_rate, wool_g:a.p_wool_g, for_masters:a.p_for_masters, active:a.p_active, note:a.p_note || ''}; if (ex) Object.assign(ex, obj); else CAT.push(obj); return {ok:true, code:code}; }
