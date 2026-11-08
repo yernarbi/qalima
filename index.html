@@ -58,6 +58,7 @@ h2 .count{font-size:14px;font-weight:600;color:var(--muted)}
 .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.gold{background:var(--gold-soft);color:var(--gold)}
 .empty{color:var(--muted);padding:14px;border:1px dashed var(--line);border-radius:var(--r);text-align:center}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .prod{border:2px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 6px;text-align:center;cursor:pointer;min-height:120px}
 .prod svg{width:52px;height:52px;display:block;margin:4px auto 6px;color:var(--accent)}
 .prod .n{font-weight:700}
@@ -254,6 +255,7 @@ var T = {
   attendance:'Смены (этот месяц)', att_line:'{d} дн. · {h} ч · сегодня {t}', not_on_shift:'не на смене', close:'Закрыть', show_photos:'📷 Фото'
  }
 };
+var ACTIVE = ['TAQIYA','BAYPAQ'];
 var PROD = {
   TAQIYA:{kk:'Тақия', ru:'Тақия'}, BAYPAQ:{kk:'Байпақ', ru:'Байпақ'}, SHEEP:{kk:'Қошақан', ru:'Овечка'}
 };
@@ -571,9 +573,9 @@ function renderMaster(w, d, ro){
   } else {
     var c = el('div', 'card');
     c.appendChild(el('div', 'title', t('choose')));
-    var g = el('div', 'grid3');
+    var g = el('div', 'grid2');
     var rates = {}; (d.rates || []).forEach(function(r){ rates[r.product_code] = r.rate; });
-    ['TAQIYA','BAYPAQ','SHEEP'].forEach(function(code){
+    ACTIVE.forEach(function(code){
       var b = el('button', 'prod' + (ui.product === code ? ' on' : '')); b.type = 'button';
       b.append(svgIcon(code), el('div', 'n', pname(code)), el('div', 'p', fmt(rates[code]) + ' ₸'));
       b.onclick = function(){ if (ui.product !== code) ui.size = ''; ui.product = code; render(); };
@@ -664,8 +666,8 @@ function renderMaster(w, d, ro){
   /* rates & rules */
   w.appendChild(section(t('rates')));
   var rc = el('div', 'card');
-  var rg = el('div', 'grid3');
-  (d.rates || []).forEach(function(r){ var b = el('div', 'prod'); b.style.cursor = 'default'; b.append(svgIcon(r.product_code), el('div', 'n', pname(r.product_code)), el('div', 'p', fmt(r.rate) + ' ₸ ' + t('per_piece'))); rg.appendChild(b); });
+  var rg = el('div', 'grid2');
+  (d.rates || []).filter(function(r){ return ACTIVE.indexOf(r.product_code) >= 0; }).forEach(function(r){ var b = el('div', 'prod'); b.style.cursor = 'default'; b.append(svgIcon(r.product_code), el('div', 'n', pname(r.product_code)), el('div', 'p', fmt(r.rate) + ' ₸ ' + t('per_piece'))); rg.appendChild(b); });
   rc.appendChild(rg);
   var rl = el('ul', 'rules'); ['rule1','rule2','rule3','rule4'].forEach(function(k){ rl.appendChild(el('li', '', t(k))); });
   rc.appendChild(rl); w.appendChild(rc);
@@ -764,7 +766,7 @@ function renderAdmin(w, d, standalone){
       var le = el('div', 'lineedit');
       le.appendChild(el('div', 'note', t('line_word') + ' ' + (idx + 1)));
       var r1 = el('div', 'row1'); var seg = el('div', 'seg');
-      ['TAQIYA','BAYPAQ','SHEEP'].forEach(function(code){ var b = el('button', ln.product === code ? 'on' : '', pname(code)); b.type = 'button'; b.onclick = function(){ if (ln.product !== code) ln.size = ''; ln.product = code; render(); }; seg.appendChild(b); });
+      ACTIVE.forEach(function(code){ var b = el('button', ln.product === code ? 'on' : '', pname(code)); b.type = 'button'; b.onclick = function(){ if (ln.product !== code) ln.size = ''; ln.product = code; render(); }; seg.appendChild(b); });
       r1.appendChild(seg);
       if (tu.lines.length > 1) { var rm = el('button', 'rm', '×'); rm.type = 'button'; rm.onclick = function(){ tu.lines.splice(idx, 1); render(); }; r1.appendChild(rm); }
       le.appendChild(r1);
