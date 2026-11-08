@@ -310,7 +310,9 @@ var T = {
   attendance:'Смены (этот месяц)', att_line:'{d} дн. · {h} ч · сегодня {t}', not_on_shift:'не на смене', close:'Закрыть', show_photos:'📷 Фото'
  }
 };
-var ACTIVE = ['TAQIYA','BAYPAQ'];
+var CATALOG = [];
+function ACTIVE_LIST(){ var a = CATALOG.filter(function(p){ return p.active && p.for_masters; }).map(function(p){ return p.code; }); return a.length ? a : ['TAQIYA','BAYPAQ']; }
+var GENERIC_ICON = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="10" y="14" width="44" height="36" rx="6"/><path d="M10 26h44M22 38c3-4 7-4 10 0s7 4 10 0"/></svg>';
 function ROSETTE(id){ return '<svg viewBox="0 0 120 120" fill="none" stroke="#FFF3E6" stroke-width="6" stroke-linecap="round" aria-hidden="true"><g id="IDX"><path d="M60 60V40M60 40c0-12-10-18-20-16s-12 16-3 19 11-3 8-8M60 40c0-12 10-18 20-16s12 16 3 19-11-3-8-8"/></g><use href="#IDX" transform="rotate(90 60 60)"/><use href="#IDX" transform="rotate(180 60 60)"/><use href="#IDX" transform="rotate(270 60 60)"/><circle cx="60" cy="60" r="7"/></svg>'.split('IDX').join(id); }
 var PROD = {
   TAQIYA:{kk:'Тақия', ru:'Тақия'}, BAYPAQ:{kk:'Байпақ', ru:'Байпақ'}, SHEEP:{kk:'Қошақан', ru:'Овечка'}
@@ -331,7 +333,7 @@ var $ = function(id){ return document.getElementById(id); };
 function el(tag, cls, text){ var n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined && text !== null) n.textContent = String(text); return n; }
 function t(key, vars){ var s = (T[S.lang] && T[S.lang][key]) || T.ru[key] || key; if (vars) Object.keys(vars).forEach(function(k){ s = s.split('{'+k+'}').join(vars[k]); }); return s; }
 function fmt(v){ return new Intl.NumberFormat('ru-RU').format(Math.round(Number(v) || 0)).replace(/[  ]/g, ' '); }
-function pname(code){ return (PROD[code] && PROD[code][S.lang]) || code; }
+function pname(code){ var c = CATALOG.filter(function(p){ return p.code === code; })[0]; if (c) return (S.lang === 'kk' ? c.kk : c.ru) || c.ru || code; return (PROD[code] && PROD[code][S.lang]) || code; }
 function pfull(code, size){ return pname(code) + (size ? ' · ' + t('size_l') + ' ' + size : ''); }
 function dur(min){ min = Math.max(0, Math.round(Number(min) || 0)); var h = Math.floor(min / 60), m = min % 60; return (h ? h + ' ' + t('hh') + ' ' : '') + m + ' ' + t('mm'); }
 function compressImage(file){
@@ -484,7 +486,7 @@ function btn(label, cls, fn){ var b = el('button', 'btn' + (cls ? ' ' + cls : ''
 function toast(msg, bad){ var n = $('toast'); n.textContent = msg; n.className = 'toast' + (bad ? ' bad' : ''); n.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function(){ n.hidden = true; }, 2800); }
 function section(title, count){ var h = el('h2', '', title); if (count !== undefined) h.appendChild(el('span', 'count', count)); return h; }
 function empty(txt){ return el('div', 'empty', txt); }
-function svgIcon(code){ var d = el('span'); d.innerHTML = ICON[code]; return d.firstChild; }
+function svgIcon(code){ var d = el('span'); d.innerHTML = ICON[code] || GENERIC_ICON; return d.firstChild; }
 function todayISO(add){ var d = new Date(Date.now() + 5*3600*1000 + (add||0)*86400000); return d.toISOString().slice(0,10); }
 
 /* ---------- API ---------- */
@@ -592,11 +594,11 @@ function paintBar(){
 }
 $('lang-btn').onclick = function(){ S.lang = S.lang === 'kk' ? 'ru' : 'kk'; persist(); paintBar(); render(); };
 $('logout-btn').onclick = function(){ logout(false); };
-$('refresh-btn').onclick = function(){ load().then(function(){ toast(t('refresh') + ' ✓'); }); };
+$('refresh-btn').onclick = function(){ AUX = {}; load().then(function(){ toast(t('refresh') + ' ✓'); }); };
 
 function load(){
   var fn = S.role === 'master' ? 'portal_master_home' : S.role === 'admin' ? 'portal_admin_home' : 'portal_manager_home';
-  return rpc(fn, {p_token:S.token}).then(function(d){ S.data = d; render(); })
+  return rpc(fn, {p_token:S.token}).then(function(d){ S.data = d; var c = (d && (d.catalog || (d.workshop && d.workshop.catalog))) || null; if (c) CATALOG = c; render(); })
     .catch(function(e){ if (!S.token) return; $('app').replaceChildren(el('div', 'wrap', e.server ? t('error') : t('net'))); });
 }
 function render(){
@@ -631,9 +633,9 @@ function renderMaster(w, d, ro){
   } else {
     var c = el('div', 'card');
     c.appendChild(el('div', 'title', t('choose')));
-    var g = el('div', 'grid2');
+    var AL = ACTIVE_LIST(); var g = el('div', AL.length > 2 ? 'grid3' : 'grid2');
     var rates = {}; (d.rates || []).forEach(function(r){ rates[r.product_code] = r.rate; });
-    ACTIVE.forEach(function(code){
+    AL.forEach(function(code){
       var b = el('button', 'prod' + (ui.product === code ? ' on' : '')); b.type = 'button';
       b.append(svgIcon(code), el('div', 'n', pname(code)), el('div', 'p', fmt(rates[code]) + ' ₸'));
       b.onclick = function(){ if (ui.product !== code) ui.size = ''; ui.product = code; render(); };
@@ -724,8 +726,8 @@ function renderMaster(w, d, ro){
   /* rates & rules */
   w.appendChild(section(t('rates')));
   var rc = el('div', 'card');
-  var rg = el('div', 'grid2');
-  (d.rates || []).filter(function(r){ return ACTIVE.indexOf(r.product_code) >= 0; }).forEach(function(r){ var b = el('div', 'prod'); b.style.cursor = 'default'; b.append(svgIcon(r.product_code), el('div', 'n', pname(r.product_code)), el('div', 'p', fmt(r.rate) + ' ₸ ' + t('per_piece'))); rg.appendChild(b); });
+  var AL2 = ACTIVE_LIST(); var rg = el('div', AL2.length > 2 ? 'grid3' : 'grid2');
+  (d.rates || []).filter(function(r){ return AL2.indexOf(r.product_code) >= 0; }).forEach(function(r){ var b = el('div', 'prod'); b.style.cursor = 'default'; b.append(svgIcon(r.product_code), el('div', 'n', pname(r.product_code)), el('div', 'p', fmt(r.rate) + ' ₸ ' + t('per_piece'))); rg.appendChild(b); });
   rc.appendChild(rg);
   var rl = el('ul', 'rules'); ['rule1','rule2','rule3','rule4'].forEach(function(k){ rl.appendChild(el('li', '', t(k))); });
   rc.appendChild(rl); w.appendChild(rc);
@@ -824,7 +826,7 @@ function renderAdmin(w, d, standalone){
       var le = el('div', 'lineedit');
       le.appendChild(el('div', 'note', t('line_word') + ' ' + (idx + 1)));
       var r1 = el('div', 'row1'); var seg = el('div', 'seg');
-      ACTIVE.forEach(function(code){ var b = el('button', ln.product === code ? 'on' : '', pname(code)); b.type = 'button'; b.onclick = function(){ if (ln.product !== code) ln.size = ''; ln.product = code; render(); }; seg.appendChild(b); });
+      ACTIVE_LIST().forEach(function(code){ var b = el('button', ln.product === code ? 'on' : '', pname(code)); b.type = 'button'; b.onclick = function(){ if (ln.product !== code) ln.size = ''; ln.product = code; render(); }; seg.appendChild(b); });
       r1.appendChild(seg);
       if (tu.lines.length > 1) { var rm = el('button', 'rm', '×'); rm.type = 'button'; rm.onclick = function(){ tu.lines.splice(idx, 1); render(); }; r1.appendChild(rm); }
       le.appendChild(r1);
@@ -968,7 +970,7 @@ function qcCard(b){
 }
 
 /* ---------- MANAGER ---------- */
-var TABS = [['today','Сегодня'],['workshop','Цех'],['mview','Кабинет мастерицы'],['agents','Агенты'],['people','Люди'],['docs','Документы и события']];
+var TABS = [['today','Сегодня'],['workshop','Цех'],['catalog','Каталог и склад'],['journal','Журнал'],['mview','Кабинет мастерицы'],['agents','Агенты'],['people','Люди'],['docs','Документы и события']];
 function renderManager(w, d){
   var k = d.kpi || {};
   w.appendChild(el('h1', '', 'Пульт Qalima'));
@@ -979,6 +981,8 @@ function renderManager(w, d){
   if (S.tab === 'today') mgrToday(w, d);
   else if (S.tab === 'workshop') { S.lang = 'ru'; renderAdmin(w, d.workshop || {}, false); }
   else if (S.tab === 'mview') mgrMasterView(w, d);
+  else if (S.tab === 'catalog') mgrCatalog(w);
+  else if (S.tab === 'journal') mgrJournal(w);
   else if (S.tab === 'agents') mgrAgents(w, d);
   else if (S.tab === 'people') mgrPeople(w, d);
   else mgrDocs(w, d);
@@ -1049,8 +1053,164 @@ function mgrMasterView(w, d){
 }
 function loadMv(){
   var mv = S.ui.mv; mv.loading = true; render();
-  rpc('portal_master_view', {p_token:S.token, p_master:Number(mv.id)}).then(function(d){ mv.data = d; mv.loading = false; render(); })
+  rpc('portal_master_view', {p_token:S.token, p_master:Number(mv.id)}).then(function(d){ mv.data = d; if (d && d.catalog) CATALOG = d.catalog; mv.loading = false; render(); })
     .catch(function(){ mv.loading = false; toast(t('net'), true); render(); });
+}
+
+
+/* ---------- MANAGER: catalog & stock ---------- */
+var AUX = {};
+function aux(fn, key, force){
+  if (!force && AUX[key] && AUX[key] !== 'loading') return AUX[key];
+  if (AUX[key] === 'loading') return null;
+  AUX[key] = 'loading';
+  rpc(fn, {p_token:S.token}).then(function(d){ AUX[key] = d; if (d && d.catalog) CATALOG = d.catalog; render(); }).catch(function(){ AUX[key] = null; toast(t('net'), true); });
+  return null;
+}
+function refreshAll(){ AUX = {}; return load(); }
+function mgrCatalog(w){
+  var d = aux('portal_mgr_catalog', 'cat');
+  w.appendChild(el('p', 'lead', 'Здесь вы управляете товарами и остатками. Новый товар сразу появляется у мастериц и администратора, а агенты Claude берут каталог, цены и минимальные цены отсюда при каждом запуске.'));
+  if (!d) { w.appendChild(el('div', 'card', t('loading'))); return; }
+  var f = S.ui.pf;
+  w.appendChild(section('Товары', (d.catalog || []).length));
+  if (!f) w.appendChild(btn('＋ Новый товар', 'gold block', function(){ S.ui.pf = {code:'', ru:'', kk:'', price:'', rate:'', wool:'', masters:true, active:true, mode:'none', sizes:'', note:''}; render(); }));
+  if (f) w.appendChild(productForm(f, d));
+  var ul = el('ul', 'list');
+  (d.catalog || []).forEach(function(p){
+    var li = el('li', 'item'); var top = el('div', 'top');
+    top.appendChild(el('span', 'pill ' + (p.active ? 'ok' : 'bad'), p.active ? 'в продаже' : 'архив'));
+    top.appendChild(el('span', 'pill' + (p.for_masters ? '' : ' gold'), p.for_masters ? 'мастерицы сдают на сайте' : 'скрыт у мастериц'));
+    top.appendChild(el('span', '', p.code));
+    li.append(top, el('div', 'title', p.ru + (p.kk && p.kk !== p.ru ? ' · ' + p.kk : '')));
+    var sz = (d.sizes && d.sizes[p.code]) || [];
+    li.appendChild(el('div', 'sub', 'Цена ' + fmt(p.price) + ' ₸ · мастерице ' + fmt(p.rate) + ' ₸/шт' + (p.wool_g ? ' · шерсть ' + p.wool_g + ' г' : '') + ' · размеров: ' + (sz.length || 'нет')));
+    if (p.note) li.appendChild(el('div', 'note', p.note));
+    var a = el('div', 'acts');
+    a.appendChild(btn('Изменить', 'small', function(){ S.ui.pf = {code:p.code, ru:p.ru, kk:p.kk, price:p.price, rate:p.rate, wool:p.wool_g || '', masters:p.for_masters, active:p.active, mode:'keep', sizes:sz.map(function(x){ return x.size; }).join(', '), note:p.note || ''}; render(); window.scrollTo({top:0, behavior:'smooth'}); }));
+    li.appendChild(a); ul.appendChild(li);
+  });
+  w.appendChild(ul);
+
+  /* stock editor */
+  w.appendChild(section('Остатки на складе'));
+  var sr = S.ui.sr || (S.ui.sr = {reason:''});
+  var c = el('div', 'card');
+  c.appendChild(el('div', 'note', 'Впишите фактическое количество и нажмите «Сохранить». Разница запишется как инвентаризация — история не теряется.'));
+  var ri = el('input', 't'); ri.placeholder = 'Причина (например: пересчёт, продал на ярмарке)'; ri.value = sr.reason; ri.oninput = function(){ sr.reason = ri.value; };
+  c.append(el('label', 'f', 'Причина корректировки'), ri);
+  var groups = {};
+  (d.stock || []).forEach(function(r){ (groups[r.product_code] = groups[r.product_code] || []).push(r); });
+  (d.catalog || []).filter(function(p){ return p.active; }).forEach(function(p){
+    var rows = groups[p.code] || []; if (!rows.length) return;
+    var hasSizes = rows.some(function(r){ return r.size; });
+    c.appendChild(el('div', 'sz-h', pname(p.code)));
+    var tb = el('table', 'tb'); var tbody = el('tbody');
+    rows.forEach(function(r){
+      if (hasSizes && !r.size && !Number(r.qty)) return;
+      var tr = el('tr');
+      tr.appendChild(el('td', '', r.size ? 'размер ' + r.size : (hasSizes ? 'без размера' : 'всего')));
+      tr.appendChild(el('td', 'num', fmt(r.qty) + ' шт'));
+      var td = el('td'); var inp = el('input', 't'); inp.type = 'number'; inp.min = 0; inp.inputMode = 'numeric'; inp.value = r.qty; inp.style.minHeight = '40px'; inp.style.maxWidth = '100px';
+      td.appendChild(inp); tr.appendChild(td);
+      var td2 = el('td'); td2.appendChild(btn('Сохранить', 'small', function(x){
+        var v = parseInt(inp.value, 10); if (isNaN(v) || v < 0) { toast('Введите число', true); return; }
+        x.disabled = true;
+        rpc('portal_mgr_stock_set', {p_token:S.token, p_product:p.code, p_size:r.size || null, p_qty:v, p_reason:sr.reason}).then(function(res){
+          if (!res || !res.ok) { x.disabled = false; toast(t('error'), true); return; }
+          toast(res.delta ? 'Остаток изменён (' + (res.delta > 0 ? '+' : '') + res.delta + ')' : 'Без изменений'); refreshAll();
+        }).catch(function(){ x.disabled = false; toast(t('net'), true); });
+      }));
+      tr.appendChild(td2); tbody.appendChild(tr);
+    });
+    tb.appendChild(tbody); var wrapx = el('div', 'scroll-x'); wrapx.appendChild(tb); c.appendChild(wrapx);
+  });
+  w.appendChild(c);
+
+  /* wool */
+  w.appendChild(section('Шерсть на складе'));
+  var wc = el('div', 'card');
+  (d.wool || []).forEach(function(x){
+    var row = el('div', 'acts'); row.style.alignItems = 'center';
+    row.appendChild(el('span', '', (x.kind === 'меринос' ? 'Меринос' : 'Шерсть (тақия, байпақ)') + ': ' + fmt(x.qty) + ' г →'));
+    var inp = el('input', 't'); inp.type = 'number'; inp.min = 0; inp.value = x.qty; inp.style.maxWidth = '140px'; inp.style.minHeight = '40px';
+    row.appendChild(inp);
+    row.appendChild(btn('Сохранить', 'small', function(b){ act(b, 'portal_mgr_wool_set', {p_token:S.token, p_kind:x.kind, p_grams:parseInt(inp.value, 10) || 0}, 'Сохранено').then(function(){ AUX = {}; render(); }); }));
+    wc.appendChild(row);
+  });
+  w.appendChild(wc);
+}
+function productForm(f, d){
+  var c = el('div', 'card');
+  c.appendChild(el('div', 'title', f.code ? 'Изменить товар ' + f.code : 'Новый товар'));
+  function field(label, key, type, ph){ var i = el(type === 'area' ? 'textarea' : 'input', 't'); if (type && type !== 'area') i.type = type; if (ph) i.placeholder = ph; i.value = f[key] === null || f[key] === undefined ? '' : f[key]; i.oninput = function(){ f[key] = i.value; }; c.append(el('label', 'f', label), i); }
+  field('Название (рус)', 'ru', 'text', 'Например: Жайнамаз');
+  field('Атауы (қаз)', 'kk', 'text', 'Мысалы: Жайнамаз');
+  field('Розничная цена, ₸', 'price', 'number');
+  field('Оплата мастерице за 1 шт, ₸', 'rate', 'number');
+  field('Шерсть на 1 шт, г (для себестоимости)', 'wool', 'number');
+  c.appendChild(el('label', 'f', 'Размеры'));
+  var seg = el('div', 'seg');
+  (f.code ? [['keep','Не менять']] : []).concat([['none','Без размеров'],['TAQIYA','Как у тақия'],['BAYPAQ','Как у байпақ'],['custom','Свои']]).forEach(function(o){
+    var b = el('button', f.mode === o[0] ? 'on' : '', o[1]); b.type = 'button'; b.onclick = function(){ f.mode = o[0]; render(); }; seg.appendChild(b); });
+  c.appendChild(seg);
+  if (f.mode === 'custom') field('Размеры через запятую', 'sizes', 'text', 'Например: 60x110, 70x120');
+  function check(label, key){ var l = el('label', 'f'); l.style.textTransform = 'none'; l.style.letterSpacing = '0'; var cb = el('input'); cb.type = 'checkbox'; cb.checked = !!f[key]; cb.onchange = function(){ f[key] = cb.checked; }; l.append(cb, document.createTextNode(' ' + label)); c.appendChild(l); }
+  check('Мастерицы сдают этот товар на сайте', 'masters');
+  check('В продаже (агенты предлагают клиентам)', 'active');
+  field('Описание для агентов (материал, особенности)', 'note', 'area');
+  var a = el('div', 'acts');
+  a.appendChild(btn('Сохранить', 'primary', function(x){
+    if (!String(f.ru || '').trim() || !(Number(f.price) > 0)) { toast('Нужны название и цена', true); return; }
+    x.disabled = true;
+    rpc('portal_mgr_product_save', {p_token:S.token, p_code:f.code || null, p_name_ru:f.ru, p_name_kk:f.kk, p_price:Number(f.price), p_rate:f.rate === '' ? null : Number(f.rate),
+      p_wool_g:f.wool === '' ? null : parseInt(f.wool, 10), p_for_masters:!!f.masters, p_active:!!f.active, p_sizes_mode:f.mode, p_sizes:f.sizes, p_note:f.note}).then(function(r){
+      if (!r || !r.ok) { x.disabled = false; toast(r && r.error === 'rate' ? 'Оплата мастерице не может быть больше цены' : t('error'), true); return; }
+      S.ui.pf = null; toast('Сохранено: ' + r.code + '. Уже на сайте и у агентов.'); refreshAll();
+    }).catch(function(){ x.disabled = false; toast(t('net'), true); });
+  }));
+  a.appendChild(btn('Отмена', '', function(){ S.ui.pf = null; render(); }));
+  c.appendChild(a);
+  return c;
+}
+
+/* ---------- MANAGER: journal with delete ---------- */
+function delBtn(kind, id, label){
+  var armed = false;
+  return btn(label || 'Удалить', 'small danger', function(x){
+    if (!armed) { armed = true; x.textContent = 'Точно удалить?'; x.style.background = 'var(--bad)'; x.style.color = '#fff'; setTimeout(function(){ if (x.isConnected) { armed = false; x.textContent = label || 'Удалить'; x.style.background = ''; x.style.color = ''; } }, 5000); return; }
+    x.disabled = true;
+    rpc('portal_mgr_delete', {p_token:S.token, p_kind:kind, p_id:id}).then(function(r){
+      if (!r || !r.ok) { x.disabled = false; toast(t('error'), true); return; }
+      toast('Удалено. Запись сохранена в «Удалённом».'); refreshAll();
+    }).catch(function(){ x.disabled = false; toast(t('net'), true); });
+  });
+}
+function mgrJournal(w){
+  var d = aux('portal_mgr_records', 'rec');
+  w.appendChild(el('p', 'lead', 'Последние записи. Удаление делается в два нажатия; всё удалённое сохраняется в журнале внизу, при необходимости Claude восстановит запись.'));
+  if (!d) { w.appendChild(el('div', 'card', t('loading'))); return; }
+  function block(title, rows, fn){ w.appendChild(section(title, rows.length)); if (!rows.length) { w.appendChild(empty('Записей нет.')); return; } var ul = el('ul', 'list'); rows.forEach(function(r){ ul.appendChild(fn(r)); }); w.appendChild(ul); }
+  function item(topParts, title, sub, actions){ var li = el('li', 'item'); var top = el('div', 'top'); topParts.forEach(function(p){ top.appendChild(p); }); li.append(top, el('div', 'title', title)); if (sub) li.appendChild(el('div', 'sub', sub)); var a = el('div', 'acts'); actions.forEach(function(b){ a.appendChild(b); }); li.appendChild(a); return li; }
+  block('Сдачи изделий', d.batches, function(b){
+    var st = b.qc_id ? el('span', 'pill ok', 'проверено: ' + b.accepted + ' / доработка ' + b.rework + ' / брак ' + b.rejected) : el('span', 'pill gold', 'ждёт проверки');
+    var acts = []; if (b.qc_id) acts.push(delBtn('qc', b.qc_id, 'Отменить проверку')); acts.push(delBtn('batch', b.id, 'Удалить сдачу'));
+    return item([st, el('span', '', '№' + b.id + ' · ' + b.at + ' · 📷 ' + b.photos)], b.master + ' — ' + pfull(b.product_code, b.size) + ' × ' + b.qty, null, acts);
+  });
+  var seen = {};
+  block('Задания мастерицам', d.tasks, function(x){
+    var acts = [delBtn('task', x.id, 'Удалить позицию')];
+    if (x.group_id && !seen[x.group_id]) { seen[x.group_id] = 1; acts.push(delBtn('task_group', x.group_id, 'Удалить всё задание')); }
+    return item([el('span', 'pill', x.status), el('span', '', (x.master || '') + (x.due ? ' · срок ' + x.due : ''))], pfull(x.product_code, x.size) + ' — ' + x.done_qty + ' / ' + x.qty, x.comment, acts);
+  });
+  block('Выдача шерсти', d.wool, function(x){ return item([el('span', '', x.at + (x.by ? ' · выдал(а) ' + x.by : ''))], x.master + ' — ' + fmt(x.grams) + ' г · ' + x.kind, null, [delBtn('wool', x.id)]); });
+  block('Движения склада', d.stock, function(x){ return item([el('span', 'pill', x.reason), el('span', '', x.at)], pfull(x.product_code, x.size) + ': ' + (x.qty > 0 ? '+' : '') + x.qty, x.ref, [delBtn('stock', x.id)]); });
+  block('Смены', d.shifts, function(x){ return item([el('span', 'pill' + (x.fin ? '' : ' ok'), x.fin ? 'закрыта' + (x.auto_closed ? ' автоматически' : '') : 'идёт')], x.name + ' — ' + x.start + (x.fin ? '–' + x.fin : ''), String(x.hours).replace('.', ',') + ' ч', [delBtn('shift', x.id)]); });
+  block('Мои дела', d.my_tasks, function(x){ return item([el('span', 'pill', x.status), el('span', '', x.kind + ' · ' + (x.due || '') + ' · ' + x.created_by)], x.title, null, [delBtn('my_task', x.id)]); });
+  block('Одобрения', d.approvals, function(x){ return item([el('span', 'pill gold', x.status), el('span', '', x.kind + ' · ' + x.requested_by + ' · ' + x.at)], x.title, null, [delBtn('approval', x.id)]); });
+  w.appendChild(section('Удалённое', d.deleted.length));
+  if (!d.deleted.length) w.appendChild(empty('Пока ничего не удаляли.'));
+  else { var ul = el('ul', 'list'); d.deleted.forEach(function(x){ var li = el('li', 'item'); li.append(el('div', 'top', x.at + ' · ' + x.deleted_by), el('div', 'title', x.summary)); ul.appendChild(li); }); w.appendChild(ul); }
 }
 
 function mgrAgents(w, d){
@@ -1179,6 +1339,7 @@ function mgrDocs(w, d){
 
 /* ---------- DEMO data (not saved anywhere) ---------- */
 var DEMO = (function(){
+  var CAT = [{code:'TAQIYA', ru:'Тақия', kk:'Тақия', price:15000, rate:2500, wool_g:60, for_masters:true, active:true, note:''}, {code:'BAYPAQ', ru:'Байпақ', kk:'Байпақ', price:25000, rate:4000, wool_g:100, for_masters:true, active:true, note:''}, {code:'SHEEP', ru:'Овечка', kk:'Қошақан', price:4900, rate:1100, wool_g:null, for_masters:false, active:true, note:''}];
   var SZ = {TAQIYA: [44,46,48,50,52].map(function(v,i){ return {size:String(v), group:'детский', cm:v, note:['≈ 1 год','≈ 1–2 года','≈ 2–4 года','≈ 4–7 лет','≈ 7–12 лет'][i]}; })
                 .concat([53,54,55,56,57,58,59,60,61,62].map(function(v){ return {size:String(v), group:'взрослый', cm:v, note:''}; })),
             BAYPAQ: Array.from({length:26}, function(_, i){ var v = 20 + i; return {size:String(v), group: v <= 34 ? 'детский' : 'взрослый', cm: Math.round(((v/1.5) - 1.5)*2)/2, note:''}; })};
@@ -1207,14 +1368,18 @@ var DEMO = (function(){
     wool:[{kind:'жүн', grams:600, d:'05.11', note:''}, {kind:'меринос', grams:300, d:'01.11', note:''}],
     rates:[{product_code:'SHEEP', rate:1100}, {product_code:'TAQIYA', rate:2500}, {product_code:'BAYPAQ', rate:4000}]};
   function rpc(fn, a){
-    if (fn === 'portal_master_home') return master;
+    if (fn === 'portal_master_home') { master.catalog = CAT; return master; }
     if (fn === 'portal_master_view') { var mv = JSON.parse(JSON.stringify(master)); delete mv.shift; return mv; }
     if (fn === 'portal_shift_start') { master.shift = {open:true, since:'10:40', open_min:0, today_min:0, month_days:7, month_hours:31.5}; ashift = {open:true, since:'10:40', open_min:0, today_min:0, month_days:6, month_hours:22}; return {ok:true}; }
     if (fn === 'portal_shift_end') { master.shift.open = false; ashift.open = false; return {ok:true}; }
     if (fn === 'portal_photos') return [];
+    if (fn === 'portal_mgr_catalog') return {catalog:CAT, sizes:SZ, stock:[{product_code:'TAQIYA', size:'48', qty:4},{product_code:'TAQIYA', size:'56', qty:6},{product_code:'BAYPAQ', size:'38', qty:5},{product_code:'TAQIYA', size:'', qty:0},{product_code:'BAYPAQ', size:'', qty:0}], wool:[{kind:'жүн', qty:2400},{kind:'меринос', qty:900}]};
+    if (fn === 'portal_mgr_records') return {batches:[{id:101, master:'Айгерім', product_code:'TAQIYA', size:'56', qty:3, at:'07.11 10:20', qc_id:null, photos:2},{id:99, master:'Сәуле', product_code:'BAYPAQ', size:'38', qty:2, at:'06.11 15:10', qc_id:55, accepted:2, rework:0, rejected:0, photos:3}], tasks:tasks.map(function(x){ return {id:x.id, group_id:x.group_id > 0 ? x.group_id : null, master:x.master, product_code:x.product_code, size:x.size, qty:x.qty, done_qty:x.done_qty, status:x.status, due:x.due, comment:x.comment}; }), wool:[{id:1, master:'Айгерім', kind:'жүн', grams:600, at:'05.11 10:00', by:'Әсел'}], stock:[{id:1, product_code:'TAQIYA', size:'56', qty:6, reason:'приёмка ОТК', ref:'ОТК #55', at:'06.11 16:00'}], shifts:[{id:1, name:'Айгерім', start:'07.11 09:05', fin:'', auto_closed:false, hours:3.1}], my_tasks:mgr.tasks.map(function(x){ return {id:x.id, kind:x.kind, title:x.title, status:'открыта', due:x.due, created_by:x.created_by}; }), approvals:mgr.approvals.map(function(x){ return {id:x.id, kind:x.kind, title:x.title, status:'ждёт', requested_by:x.requested_by, at:x.created}; }), deleted:[]};
+    if (fn === 'portal_mgr_product_save') { var code = a.p_code || ('P' + (CAT.length)); var ex = CAT.filter(function(x){ return x.code === code; })[0]; var obj = {code:code, ru:a.p_name_ru, kk:a.p_name_kk || a.p_name_ru, price:a.p_price, rate:a.p_rate, wool_g:a.p_wool_g, for_masters:a.p_for_masters, active:a.p_active, note:a.p_note || ''}; if (ex) Object.assign(ex, obj); else CAT.push(obj); return {ok:true, code:code}; }
+    if (fn === 'portal_mgr_stock_set') return {ok:true, delta:1};
     if (fn === 'portal_master_submit') { master.pending.unshift({id:Date.now(), product_code:a.p_product, size:a.p_size || '', qty:a.p_qty, at:'сейчас', photos:0}); return {ok:true, batch_id:Date.now()}; }
-    if (fn === 'portal_admin_home') return admin();
-    if (fn === 'portal_manager_home') { mgrMode = true; mgr.workshop = admin(); mgrMode = false; return mgr; }
+    if (fn === 'portal_admin_home') { var ad = admin(); ad.catalog = CAT; return ad; }
+    if (fn === 'portal_manager_home') { mgrMode = true; mgr.workshop = admin(); mgr.workshop.catalog = CAT; mgrMode = false; return mgr; }
     if (fn === 'portal_master_submit') { master.pending.unshift({id:Date.now(), product_code:a.p_product, size:a.p_size || '', qty:a.p_qty, at:'сейчас'}); return {ok:true}; }
     if (fn === 'portal_master_cancel') { master.pending = master.pending.filter(function(x){ return x.id !== a.p_batch; }); return {ok:true}; }
     if (fn === 'portal_admin_inspect') { pending = pending.filter(function(x){ return x.id !== a.p_batch; }); return {ok:true}; }
