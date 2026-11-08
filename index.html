@@ -112,6 +112,36 @@ details.how summary::-webkit-details-marker{display:none}
 .err{color:var(--bad);font-weight:600;margin-top:10px;min-height:1.4em}
 .rules li{margin:6px 0}
 .verdict-ok{color:var(--ok);font-weight:600} .verdict-bad{color:var(--bad);font-weight:600} .verdict-warn{color:var(--warn);font-weight:600}
+.shiftbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--ok-soft);color:var(--ok);border-radius:var(--r);padding:10px 14px;margin:12px 0 0;font-weight:600}
+.shiftbar .dot{width:10px;height:10px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.shiftbar .sp{flex:1}
+.startbox{text-align:center;padding:30px 16px}
+.startbox .big{font-size:22px;font-weight:700;margin:6px 0 18px}
+.btn.huge{min-height:76px;font-size:22px;border-radius:18px;width:100%;max-width:420px}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.thumbs .th{position:relative;width:76px;height:76px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--surface);cursor:pointer;padding:0}
+.thumbs .th img{width:100%;height:100%;object-fit:cover;display:block}
+.thumbs .th .x{position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:15px;line-height:24px;cursor:pointer;padding:0}
+.thumbs .th .k{position:absolute;left:0;right:0;bottom:0;background:rgba(178,61,43,.85);color:#fff;font-size:10px;text-align:center}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:10px}
+.lightbox img{max-width:100%;max-height:78vh;border-radius:8px}
+.lightbox .cap{color:#fff;font-size:14px}
+.lightbox .nav{display:flex;gap:10px}
+.lightbox .nav button{min-height:48px;min-width:64px;border-radius:12px;border:0;background:#fff;color:#111;font-size:18px;font-weight:700;cursor:pointer}
+.tgroup .line{display:flex;justify-content:space-between;gap:8px;margin-top:10px;font-weight:600}
+.tgroup .line span:last-child{color:var(--muted);font-weight:500;white-space:nowrap}
+.tgroup .bar-p{margin-top:4px}
+.comment{background:var(--gold-soft);color:var(--ink);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:15px;white-space:pre-wrap}
+.lineedit{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:10px;background:var(--bg)}
+.lineedit .row1{display:flex;gap:8px;align-items:center}
+.lineedit .row1 .seg{flex:1}
+.lineedit .rm{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:20px;cursor:pointer;color:var(--bad)}
+.lineedit .row2{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.lineedit select.t{flex:1;min-width:150px}
+.lineedit .stepper{margin:0}
+.lineedit .stepper button{width:44px;height:44px;font-size:22px}
+.lineedit .stepper input{width:64px;height:44px;font-size:20px}
 .demo-banner{background:var(--gold-soft);color:var(--gold);text-align:center;font-size:14px;padding:6px 10px;font-weight:600}
 </style>
 </head>
@@ -171,7 +201,15 @@ var T = {
   open_tasks:'Ашық тапсырмалар', no_masters:'Шеберлер әлі қосылмаған. Басқарушы қосады.',
   recent_wool:'Соңғы берілген жүн', choose_master:'— шеберді таңдаңыз —',
   size:'Өлшем', size_l:'өлшем', kids:'Балаларға', adults:'Ересектерге', any_size:'Кез келген өлшем', choose_size:'Өлшемді таңдаңыз',
-  foot:'табан {c}', head_hint:'Бас айналымы, см', shoe_hint:'Аяқ киім өлшемі (табан ұзындығы, см)', stock_sizes:'Қойма — өлшем бойынша', no_stock:'Қоймада әзірге бұйым жоқ.'
+  foot:'табан {c}', head_hint:'Бас айналымы, см', shoe_hint:'Аяқ киім өлшемі (табан ұзындығы, см)', stock_sizes:'Қойма — өлшем бойынша', no_stock:'Қоймада әзірге бұйым жоқ.',
+  shift_start:'▶ Ауысымды бастау', shift_end:'Ауысымды аяқтау', shift_confirm:'Иә, аяқтаймын', on_shift:'Ауысымда · {t} бастап', shift_hint:'Ауысымды бастаған соң кабинет ашылады. Жұмыс уақыты өзі есептеледі.',
+  today_worked:'Бүгін жұмыс уақыты: {d}', month_line:'Осы ай: {n} күн · {h} сағат', hh:'сағ', mm:'мин', shift_need:'Алдымен ауысымды бастаңыз.',
+  shift_started:'Ауысым басталды. Сәтті жұмыс!', shift_ended:'Ауысым аяқталды. Рақмет!',
+  photo_title:'Фото (міндетті: 1–4 сурет)', photo_hint:'1) Барлық бұйымды бірге түсіріңіз. 2) Жиегі мен тігісін жақыннан. Жарық жақсы болсын.',
+  take_photo:'📷 Суретке түсіру', photo_need:'Кемінде 1 сурет қосыңыз.', photo_fail:'Сурет жүктелмеді. «Фото қосу» батырмасын басыңыз.',
+  add_photo:'📷 Фото қосу', no_photo:'фото жоқ', photos_n:'📷 {n}', defect_photo:'📷 Ақаудың суреті (міндетті емес)', uploading:'Жүктелуде…', photo_added:'Сурет қосылды',
+  task_word:'Тапсырма', positions:'{n} позиция', add_line:'＋ Позиция қосу', comment:'Түсініктеме', comment_ph:'Мысалы: түсі, өрнегі, кімге арналған', line_word:'Позиция',
+  attendance:'Ауысымдар (осы ай)', att_line:'{d} күн · {h} сағ · бүгін {t}', not_on_shift:'ауысымда емес', close:'Жабу', show_photos:'📷 Суреттер'
  },
  ru: {
   role_master:'Кабинет мастерицы', role_admin:'Кабинет администратора', role_manager:'Управляющий',
@@ -205,7 +243,15 @@ var T = {
   open_tasks:'Открытые задания', no_masters:'Мастерицы ещё не добавлены. Их добавляет управляющий.',
   recent_wool:'Последние выдачи шерсти', choose_master:'— выберите мастерицу —',
   size:'Размер', size_l:'размер', kids:'Детские', adults:'Взрослые', any_size:'Любой размер', choose_size:'Выберите размер',
-  foot:'стопа {c}', head_hint:'Обхват головы, см', shoe_hint:'Размер обуви (длина стопы, см)', stock_sizes:'Склад по размерам', no_stock:'На складе пока нет изделий.'
+  foot:'стопа {c}', head_hint:'Обхват головы, см', shoe_hint:'Размер обуви (длина стопы, см)', stock_sizes:'Склад по размерам', no_stock:'На складе пока нет изделий.',
+  shift_start:'▶ Начать смену', shift_end:'Завершить смену', shift_confirm:'Да, завершить', on_shift:'На смене · с {t}', shift_hint:'Кабинет откроется после начала смены. Рабочее время считается автоматически.',
+  today_worked:'Сегодня отработано: {d}', month_line:'В этом месяце: {n} дн. · {h} ч', hh:'ч', mm:'мин', shift_need:'Сначала начните смену.',
+  shift_started:'Смена начата. Хорошей работы!', shift_ended:'Смена завершена. Спасибо!',
+  photo_title:'Фото (обязательно: 1–4 снимка)', photo_hint:'1) Все изделия вместе. 2) Крупно край и шов. Снимайте при хорошем свете.',
+  take_photo:'📷 Сфотографировать', photo_need:'Добавьте хотя бы 1 фото.', photo_fail:'Фото не загрузилось. Нажмите «Добавить фото».',
+  add_photo:'📷 Добавить фото', no_photo:'нет фото', photos_n:'📷 {n}', defect_photo:'📷 Фото брака (необязательно)', uploading:'Загрузка…', photo_added:'Фото добавлено',
+  task_word:'Задание', positions:'{n} поз.', add_line:'＋ Добавить позицию', comment:'Комментарий', comment_ph:'Например: цвет, орнамент, для кого', line_word:'Позиция',
+  attendance:'Смены (этот месяц)', att_line:'{d} дн. · {h} ч · сегодня {t}', not_on_shift:'не на смене', close:'Закрыть', show_photos:'📷 Фото'
  }
 };
 var PROD = {
@@ -229,6 +275,131 @@ function t(key, vars){ var s = (T[S.lang] && T[S.lang][key]) || T.ru[key] || key
 function fmt(v){ return new Intl.NumberFormat('ru-RU').format(Math.round(Number(v) || 0)).replace(/[  ]/g, ' '); }
 function pname(code){ return (PROD[code] && PROD[code][S.lang]) || code; }
 function pfull(code, size){ return pname(code) + (size ? ' · ' + t('size_l') + ' ' + size : ''); }
+function dur(min){ min = Math.max(0, Math.round(Number(min) || 0)); var h = Math.floor(min / 60), m = min % 60; return (h ? h + ' ' + t('hh') + ' ' : '') + m + ' ' + t('mm'); }
+function compressImage(file){
+  return new Promise(function(resolve, reject){
+    var url = URL.createObjectURL(file); var img = new Image();
+    img.onload = function(){
+      var max = 1280, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, max / Math.max(w, h));
+      var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      var q = 0.72, data = c.toDataURL('image/jpeg', q);
+      while (data.length > 650000 && q > 0.35) { q -= 0.1; data = c.toDataURL('image/jpeg', q); }
+      resolve(data);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('img')); };
+    img.src = url;
+  });
+}
+function photoInput(onFiles, multiple){
+  var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.setAttribute('capture', 'environment'); if (multiple) inp.multiple = true; inp.hidden = true;
+  inp.onchange = function(){ var files = Array.prototype.slice.call(inp.files || []); inp.value = ''; if (!files.length) return;
+    Promise.all(files.map(compressImage)).then(onFiles).catch(function(){ toast(t('error'), true); }); };
+  return inp;
+}
+function photoButton(label, cls, onFiles, multiple){
+  var wrap = el('span'); var inp = photoInput(onFiles, multiple);
+  var b = btn(label, cls, function(){ inp.click(); }); wrap.append(b, inp); return wrap;
+}
+function thumbs(list, onRemove){
+  var box = el('div', 'thumbs');
+  list.forEach(function(p, i){
+    var th = el('button', 'th'); th.type = 'button';
+    var img = el('img'); img.src = p.data || p; img.alt = ''; th.appendChild(img);
+    if (p.kind === 'брак') th.appendChild(el('span', 'k', t('rejected')));
+    th.onclick = function(){ lightbox(list.map(function(x){ return x.data || x; }), i, list.map(function(x){ return x.at ? (x.at + (x.by ? ' · ' + x.by : '')) : ''; })); };
+    if (onRemove) { var x = el('button', 'x', '×'); x.type = 'button'; x.onclick = function(e){ e.stopPropagation(); onRemove(i); }; th.appendChild(x); }
+    box.appendChild(th);
+  });
+  return box;
+}
+function lightbox(srcs, i, caps){
+  var ov = el('div', 'lightbox'); var img = el('img'); var cap = el('div', 'cap'); var nav = el('div', 'nav');
+  function show(){ img.src = srcs[i]; cap.textContent = (i + 1) + ' / ' + srcs.length + (caps && caps[i] ? ' · ' + caps[i] : ''); }
+  var prev = el('button', '', '‹'), next = el('button', '', '›'), cl = el('button', '', '✕');
+  prev.onclick = function(e){ e.stopPropagation(); i = (i - 1 + srcs.length) % srcs.length; show(); };
+  next.onclick = function(e){ e.stopPropagation(); i = (i + 1) % srcs.length; show(); };
+  cl.onclick = function(){ ov.remove(); };
+  if (srcs.length > 1) nav.append(prev, next); nav.appendChild(cl);
+  ov.append(img, cap, nav); ov.onclick = function(e){ if (e.target === ov) ov.remove(); };
+  document.body.appendChild(ov); show();
+}
+var PHOTOS = {};
+function loadPhotos(batchId, force){
+  if (!force && PHOTOS[batchId]) return;
+  PHOTOS[batchId] = 'loading';
+  rpc('portal_photos', {p_token:S.token, p_batch:batchId}).then(function(list){ PHOTOS[batchId] = list || []; render(); }).catch(function(){ PHOTOS[batchId] = []; });
+}
+function uploadPhotos(batchId, kind, list){
+  var chain = Promise.resolve(0), fails = 0;
+  list.forEach(function(data){ chain = chain.then(function(){ return rpc('portal_photo_add', {p_token:S.token, p_batch:batchId, p_kind:kind, p_data:data})
+      .then(function(r){ if (!r || r.ok === false) fails++; }).catch(function(){ fails++; }); }); });
+  return chain.then(function(){ delete PHOTOS[batchId]; return fails; });
+}
+function groupTasks(tasks){
+  var order = [], map = {};
+  (tasks || []).forEach(function(x){ var k = String(x.group_id); if (!map[k]) { map[k] = {id:k, due:x.due, comment:x.comment, master:x.master, lines:[]}; order.push(map[k]); } map[k].lines.push(x); });
+  return order;
+}
+function taskGroupItem(g, showMaster){
+  var li = el('li', 'item tgroup'); var top = el('div', 'top');
+  if (showMaster && g.master) top.appendChild(el('span', 'pill', g.master));
+  top.appendChild(el('span', '', t('task_word') + (g.lines.length > 1 ? ' · ' + t('positions', {n:g.lines.length}) : '')));
+  if (g.due) top.appendChild(el('span', '', t('due', {d:g.due})));
+  li.appendChild(top);
+  if (g.comment) li.appendChild(el('div', 'comment', g.comment));
+  g.lines.forEach(function(x){
+    var line = el('div', 'line'); line.append(el('span', '', pfull(x.product_code, x.size) + ' — ' + x.qty), el('span', '', t('done_of', {d:x.done_qty, q:x.qty})));
+    li.appendChild(line);
+    var bar = el('div', 'bar-p'); var i = el('i'); i.style.width = Math.min(100, Math.round(100 * x.done_qty / Math.max(1, x.qty))) + '%'; bar.appendChild(i); li.appendChild(bar);
+  });
+  return li;
+}
+var shiftTimer = null;
+function shiftBar(w, sh){
+  var bar = el('div', 'shiftbar'); bar.appendChild(el('span', 'dot'));
+  var txt = el('span', '', t('on_shift', {t: sh.since || ''}) + ' · ' + dur(sh.open_min)); bar.appendChild(txt);
+  bar.appendChild(el('span', 'sp'));
+  var conf = false;
+  var b = btn(t('shift_end'), 'small', function(x){
+    if (!conf) { conf = true; x.textContent = t('shift_confirm'); x.className = 'btn small danger'; setTimeout(function(){ conf = false; if (x.isConnected) { x.textContent = t('shift_end'); x.className = 'btn small'; } }, 5000); return; }
+    x.disabled = true;
+    rpc('portal_shift_end', {p_token:S.token}).then(function(){ toast(t('shift_ended')); S.ui = {}; return load(); }).catch(function(){ x.disabled = false; toast(t('net'), true); });
+  });
+  bar.appendChild(b); w.appendChild(bar);
+  var t0 = Date.now(), base = Number(sh.open_min) || 0;
+  clearInterval(shiftTimer);
+  shiftTimer = setInterval(function(){ if (!txt.isConnected) { clearInterval(shiftTimer); return; } txt.textContent = t('on_shift', {t: sh.since || ''}) + ' · ' + dur(base + (Date.now() - t0) / 60000); }, 30000);
+}
+function renderShiftStart(w, d){
+  var sh = d.shift || {};
+  var box = el('div', 'startbox');
+  box.appendChild(el('h1', '', t('hello', {n: d.name})));
+  var now = new Date(Date.now() + 5*3600*1000);
+  var months = S.lang === 'kk' ? ['қаңтар','ақпан','наурыз','сәуір','мамыр','маусым','шілде','тамыз','қыркүйек','қазан','қараша','желтоқсан'] : ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  box.appendChild(el('div', 'big', now.getUTCDate() + ' ' + months[now.getUTCMonth()]));
+  var go = btn(t('shift_start'), 'primary huge', function(x){
+    x.disabled = true;
+    rpc('portal_shift_start', {p_token:S.token}).then(function(r){ if (r && r.ok) { toast(t('shift_started')); return load(); } x.disabled = false; toast(t('error'), true); })
+      .catch(function(){ x.disabled = false; toast(t('net'), true); });
+  });
+  box.appendChild(go);
+  box.appendChild(el('p', 'note', t('shift_hint')));
+  if (Number(sh.today_min) > 0) box.appendChild(el('p', 'lead', t('today_worked', {d: dur(sh.today_min)})));
+  box.appendChild(el('p', 'note', t('month_line', {n: sh.month_days || 0, h: String(sh.month_hours || 0).replace('.', ',')})));
+  w.appendChild(box);
+  pinBlock(w);
+}
+function sizeSelect(code, sizes, val, onChange){
+  var s = el('select', 't'); var o0 = el('option', '', '— ' + t('size_l') + ': ' + t('any_size').toLowerCase() + ' —'); o0.value = ''; s.appendChild(o0);
+  ['детский','взрослый'].forEach(function(g){
+    var items = (sizes || []).filter(function(x){ return x.group === g; }); if (!items.length) return;
+    var og = document.createElement('optgroup'); og.label = g === 'детский' ? t('kids') : t('adults');
+    items.forEach(function(x){ var o = el('option', '', x.size + (code === 'BAYPAQ' ? ' (' + t('foot', {c:String(x.cm).replace('.', ',')}) + ')' : (x.note && S.lang === 'ru' ? ' (' + x.note + ')' : ''))); o.value = x.size; if (x.size === val) o.selected = true; og.appendChild(o); });
+    s.appendChild(og);
+  });
+  s.onchange = function(){ onChange(s.value); }; return s;
+}
 function sizePicker(list, cur, onPick, allowAny, code){
   var box = el('div');
   if (allowAny) { var any = el('button', 'chip' + (!cur ? ' on' : ''), t('any_size')); any.type = 'button'; any.onclick = function(){ onPick(''); }; any.style.marginBottom = '6px'; box.appendChild(any); }
@@ -371,8 +542,10 @@ function load(){
 function render(){
   if (!S.data) return;
   var w = el('div', 'wrap');
-  if (S.role === 'master') renderMaster(w, S.data);
-  else if (S.role === 'admin') renderAdmin(w, S.data, true);
+  var sh = S.data.shift;
+  if ((S.role === 'master' || S.role === 'admin') && sh && !sh.open) renderShiftStart(w, S.data);
+  else if (S.role === 'master') { shiftBar(w, sh || {}); renderMaster(w, S.data); }
+  else if (S.role === 'admin') { if (sh) shiftBar(w, sh); renderAdmin(w, S.data, true); }
   else renderManager(w, S.data);
   $('app').replaceChildren(w);
 }
@@ -411,6 +584,11 @@ function renderMaster(w, d, ro){
     if (szl && szl.length) { c.appendChild(el('label', 'f', t('size'))); c.appendChild(sizePicker(szl, ui.size, function(v){ ui.size = v; render(); }, false, ui.product)); }
     c.appendChild(el('label', 'f', t('qty')));
     c.appendChild(stepper(ui.qty, function(v){ ui.qty = v; }, 1, 200));
+    c.appendChild(el('label', 'f', t('photo_title')));
+    c.appendChild(el('div', 'note', t('photo_hint')));
+    ui.photos = ui.photos || [];
+    if (ui.photos.length) c.appendChild(thumbs(ui.photos, function(i){ ui.photos.splice(i, 1); render(); }));
+    if (ui.photos.length < 4) { var pb = photoButton(t('take_photo'), '', function(list){ ui.photos = ui.photos.concat(list).slice(0, 4); render(); }, true); pb.firstChild.style.marginTop = '8px'; c.appendChild(pb); }
     var nl = el('label', 'f', t('note_opt')); var ni = el('input', 't'); ni.value = ui.note; ni.oninput = function(){ ui.note = ni.value; };
     c.append(nl, ni);
     var acts = el('div', 'acts');
@@ -418,8 +596,15 @@ function renderMaster(w, d, ro){
       if (!ui.product) { toast(t('choose'), true); return; }
       var need = d.sizes && d.sizes[ui.product] && d.sizes[ui.product].length;
       if (need && !ui.size) { toast(t('choose_size'), true); return; }
-      act(b, 'portal_master_submit', {p_token:S.token, p_product:ui.product, p_qty:ui.qty, p_note:ui.note, p_size: need ? ui.size : null}, t('submitted'))
-        .then(function(r){ if (r && r.ok !== false) { S.ui.sub = {open:false, product:null, size:'', qty:1, note:''}; render(); } });
+      if (!ui.photos.length) { toast(t('photo_need'), true); return; }
+      b.disabled = true; b.textContent = t('uploading');
+      rpc('portal_master_submit', {p_token:S.token, p_product:ui.product, p_qty:ui.qty, p_note:ui.note, p_size: need ? ui.size : null}).then(function(r){
+        if (!r || r.ok === false) { b.disabled = false; b.textContent = t('submit'); toast(r && r.error === 'shift' ? t('shift_need') : errText(r || {}), true); return; }
+        return uploadPhotos(r.batch_id, 'сдача', ui.photos).then(function(fails){
+          S.ui.sub = {open:false, product:null, size:'', qty:1, note:'', photos:[]};
+          toast(fails ? t('photo_fail') : t('submitted'), !!fails); return load();
+        });
+      }).catch(function(){ b.disabled = false; b.textContent = t('submit'); toast(t('net'), true); });
     });
     sb.style.flex = '1';
     acts.append(sb, btn(t('cancel'), '', function(){ ui.open = false; render(); }));
@@ -434,22 +619,21 @@ function renderMaster(w, d, ro){
     d.pending.forEach(function(b){
       var li = el('li', 'item');
       var top = el('div', 'top'); top.append(el('span', 'pill gold', t('waiting')), el('span', '', b.at));
+      top.appendChild(el('span', 'pill ' + (Number(b.photos) ? '' : 'bad'), Number(b.photos) ? t('photos_n', {n:b.photos}) : t('no_photo')));
       li.append(top, el('div', 'title', pfull(b.product_code, b.size) + ' — ' + b.qty));
-      if (!ro) { var a = el('div', 'acts'); a.appendChild(btn(t('withdraw'), 'small danger', function(x){ act(x, 'portal_master_cancel', {p_token:S.token, p_batch:b.id}, t('withdrawn')); })); li.appendChild(a); }
+      if (!ro) { var a = el('div', 'acts');
+        a.appendChild(photoButton(t('add_photo'), 'small', function(list){ uploadPhotos(b.id, 'сдача', list).then(function(f){ toast(f ? t('photo_fail') : t('photo_added'), !!f); load(); }); }, true));
+        a.appendChild(btn(t('withdraw'), 'small danger', function(x){ act(x, 'portal_master_cancel', {p_token:S.token, p_batch:b.id}, t('withdrawn')); })); li.appendChild(a); }
       ul.appendChild(li);
     });
     w.appendChild(ul);
   }
 
   /* tasks */
-  w.appendChild(section(t('tasks'), (d.tasks || []).length || ''));
-  if (!(d.tasks || []).length) w.appendChild(empty(t('no_tasks')));
-  else { var tl = el('ul', 'list'); d.tasks.forEach(function(x){
-    var li = el('li', 'item');
-    var top = el('div', 'top'); if (x.due) top.appendChild(el('span', '', t('due', {d:x.due})));
-    li.append(top, el('div', 'title', pfull(x.product_code, x.size) + ' — ' + x.qty), el('div', 'sub', t('done_of', {d:x.done_qty, q:x.qty})));
-    var bar = el('div', 'bar-p'); var i = el('i'); i.style.width = Math.min(100, Math.round(100 * x.done_qty / Math.max(1, x.qty))) + '%'; bar.appendChild(i); li.appendChild(bar);
-    tl.appendChild(li); }); w.appendChild(tl); }
+  var groups = groupTasks(d.tasks);
+  w.appendChild(section(t('tasks'), groups.length || ''));
+  if (!groups.length) w.appendChild(empty(t('no_tasks')));
+  else { var tl = el('ul', 'list'); groups.forEach(function(g){ tl.appendChild(taskGroupItem(g, false)); }); w.appendChild(tl); }
 
   /* checked */
   w.appendChild(section(t('checked')));
@@ -462,6 +646,11 @@ function renderMaster(w, d, ro){
     if (x.rejected) top.appendChild(el('span', 'pill bad', t('rejected') + ' ' + x.rejected + (x.fault === 'материал' ? ' · ' + t('f_material') : x.fault === 'мастер' ? ' · ' + t('f_master') : '')));
     li.append(top, el('div', 'title', pfull(x.product_code, x.size) + ' — ' + x.qty));
     if (x.reason) li.appendChild(el('div', 'sub', t('reason') + ': ' + x.reason));
+    if (Number(x.photos) && x.batch_id) {
+      var ph = PHOTOS[x.batch_id];
+      if (Array.isArray(ph)) li.appendChild(thumbs(ph));
+      else { var pa = el('div', 'acts'); pa.appendChild(btn(t('show_photos') + ' ' + x.photos, 'small', function(){ loadPhotos(x.batch_id); })); li.appendChild(pa); }
+    }
     cl.appendChild(li); }); w.appendChild(cl); }
 
   /* wool */
@@ -565,25 +754,38 @@ function renderAdmin(w, d, standalone){
   }
   w.appendChild(sc);
 
-  /* task give */
+  /* task give (several positions) */
   if (masters.length) {
     w.appendChild(section(t('task_give')));
-    var tu = S.ui.task || (S.ui.task = {master:'', product:'SHEEP', size:'', qty:10, due:todayISO(7)});
+    var tu = S.ui.tg || (S.ui.tg = {master:'', due:todayISO(7), comment:'', lines:[{product:'TAQIYA', size:'', qty:1}]});
     var tc = el('div', 'card');
     tc.append(el('label', 'f', t('master')), masterSelect(masters, tu.master, function(v){ tu.master = v; }));
-    tc.appendChild(el('label', 'f', t('product')));
-    var seg3 = el('div', 'seg');
-    ['TAQIYA','BAYPAQ','SHEEP'].forEach(function(code){ var b = el('button', tu.product === code ? 'on' : '', pname(code)); b.type = 'button'; b.onclick = function(){ if (tu.product !== code) tu.size = ''; tu.product = code; render(); }; seg3.appendChild(b); });
-    tc.appendChild(seg3);
-    var tsz = d.sizes && d.sizes[tu.product];
-    if (tsz && tsz.length) { tc.appendChild(el('label', 'f', t('size'))); tc.appendChild(sizePicker(tsz, tu.size, function(v){ tu.size = v; render(); }, true, tu.product)); }
-    tc.appendChild(el('label', 'f', t('qty')));
-    tc.appendChild(stepper(tu.qty, function(v){ tu.qty = v; }, 1, 500));
+    tu.lines.forEach(function(ln, idx){
+      var le = el('div', 'lineedit');
+      le.appendChild(el('div', 'note', t('line_word') + ' ' + (idx + 1)));
+      var r1 = el('div', 'row1'); var seg = el('div', 'seg');
+      ['TAQIYA','BAYPAQ','SHEEP'].forEach(function(code){ var b = el('button', ln.product === code ? 'on' : '', pname(code)); b.type = 'button'; b.onclick = function(){ if (ln.product !== code) ln.size = ''; ln.product = code; render(); }; seg.appendChild(b); });
+      r1.appendChild(seg);
+      if (tu.lines.length > 1) { var rm = el('button', 'rm', '×'); rm.type = 'button'; rm.onclick = function(){ tu.lines.splice(idx, 1); render(); }; r1.appendChild(rm); }
+      le.appendChild(r1);
+      var r2 = el('div', 'row2');
+      var szs = d.sizes && d.sizes[ln.product];
+      if (szs && szs.length) r2.appendChild(sizeSelect(ln.product, szs, ln.size, function(v){ ln.size = v; }));
+      r2.appendChild(stepper(ln.qty, function(v){ ln.qty = v; }, 1, 500));
+      le.appendChild(r2);
+      tc.appendChild(le);
+    });
+    var addl = btn(t('add_line'), 'small', function(){ var last = tu.lines[tu.lines.length - 1] || {product:'TAQIYA'}; tu.lines.push({product:last.product, size:'', qty:1}); render(); });
+    addl.style.marginTop = '10px'; tc.appendChild(addl);
+    var cm = el('textarea', 't'); cm.placeholder = t('comment_ph'); cm.value = tu.comment; cm.oninput = function(){ tu.comment = cm.value; };
+    tc.append(el('label', 'f', t('comment')), cm);
     var dl = el('label', 'f', t('due_date')); var di = el('input', 't'); di.type = 'date'; di.value = tu.due; di.onchange = function(){ tu.due = di.value; };
     tc.append(dl, di);
     var tb = btn(t('give'), 'primary block', function(x){
       if (!tu.master) { toast(t('choose_master'), true); return; }
-      act(x, 'portal_admin_task', {p_token:S.token, p_master:Number(tu.master), p_product:tu.product, p_qty:tu.qty, p_due:tu.due || null, p_size: tu.size || null}, t('task_given'));
+      var lines = tu.lines.map(function(l){ return {product:l.product, size:l.size || null, qty:l.qty}; });
+      act(x, 'portal_admin_task_group', {p_token:S.token, p_master:Number(tu.master), p_due:tu.due || null, p_comment:tu.comment, p_lines:lines}, t('task_given'))
+        .then(function(r){ if (r && r.ok !== false) { S.ui.tg = null; render(); } });
     });
     tb.style.marginTop = '12px'; tc.appendChild(tb);
     w.appendChild(tc);
@@ -618,13 +820,24 @@ function renderAdmin(w, d, standalone){
     ml.appendChild(li); }); w.appendChild(ml); }
 
   /* open tasks */
-  w.appendChild(section(t('open_tasks'), (d.tasks || []).length || ''));
-  if (!(d.tasks || []).length) w.appendChild(empty(t('no_tasks')));
-  else { var ol = el('ul', 'list'); d.tasks.forEach(function(x){
-    var li = el('li', 'item'); var top = el('div', 'top'); top.appendChild(el('span', '', x.master)); if (x.due) top.appendChild(el('span', '', t('due', {d:x.due})));
-    li.append(top, el('div', 'title', pfull(x.product_code, x.size) + ' — ' + t('done_of', {d:x.done_qty, q:x.qty})));
-    var bar = el('div', 'bar-p'); var i = el('i'); i.style.width = Math.min(100, Math.round(100 * x.done_qty / Math.max(1, x.qty))) + '%'; bar.appendChild(i); li.appendChild(bar);
-    ol.appendChild(li); }); w.appendChild(ol); }
+  var ag = groupTasks(d.tasks);
+  w.appendChild(section(t('open_tasks'), ag.length || ''));
+  if (!ag.length) w.appendChild(empty(t('no_tasks')));
+  else { var ol = el('ul', 'list'); ag.forEach(function(g){ ol.appendChild(taskGroupItem(g, true)); }); w.appendChild(ol); }
+
+  /* attendance */
+  if ((d.attendance || []).length) {
+    w.appendChild(section(t('attendance')));
+    var al = el('ul', 'list');
+    d.attendance.forEach(function(a){
+      var li = el('li', 'item'); var top = el('div', 'top');
+      top.append(el('span', 'pill' + (a.on_shift ? ' ok' : ''), a.on_shift ? t('on_shift', {t:a.since || ''}) : t('not_on_shift')));
+      if (a.role === 'admin') top.appendChild(el('span', '', S.lang === 'kk' ? 'әкімші' : 'администратор'));
+      li.append(top, el('div', 'title', a.name), el('div', 'sub', t('att_line', {d:a.month_days, h:String(a.month_hours).replace('.', ','), t:dur(a.today_min)})));
+      al.appendChild(li);
+    });
+    w.appendChild(al);
+  }
 
   if (standalone) pinBlock(w);
 }
@@ -649,6 +862,11 @@ function qcCard(b){
   var c = el('div', 'card');
   var top = el('div', 'top'); top.className = 'top note'; top.textContent = b.at + (b.note ? ' · ' + b.note : '');
   c.append(top, el('div', 'title', b.master + ' — ' + pfull(b.product_code, b.size) + ' × ' + b.qty));
+  if (Number(b.photos)) {
+    var ph = PHOTOS[b.id];
+    if (Array.isArray(ph)) c.appendChild(thumbs(ph));
+    else { c.appendChild(el('div', 'note', t('uploading'))); loadPhotos(b.id); }
+  } else c.appendChild(el('span', 'pill bad', t('no_photo')));
   c.appendChild(el('div', 'note', t('qc_lead', {q:b.qty})));
   var g = el('div', 'qc');
   [['a', t('accepted'), 'ok'], ['r', t('rework'), 'rw'], ['x', t('rejected'), 'bd']].forEach(function(f){
@@ -670,12 +888,20 @@ function qcCard(b){
     c.appendChild(el('label', 'f', t('reason')));
     var ri = el('input', 't'); ri.placeholder = t('reason_need'); ri.value = st.reason; ri.oninput = function(){ st.reason = ri.value; };
     c.appendChild(ri);
+    st.dp = st.dp || [];
+    if (st.dp.length) c.appendChild(thumbs(st.dp, function(i){ st.dp.splice(i, 1); render(); }));
+    var dpb = photoButton(t('defect_photo'), 'small', function(list){ st.dp = st.dp.concat(list).slice(0, 4); render(); }, true); dpb.firstChild.style.marginTop = '8px';
+    c.appendChild(dpb);
   }
   var sv = btn(t('save'), 'primary block', function(x){
     if (st.a + st.r + st.x !== b.qty) { toast(t('sum_bad', {q:b.qty}), true); return; }
     if (st.r + st.x > 0 && !st.reason.trim()) { toast(t('reason_req'), true); return; }
-    act(x, 'portal_admin_inspect', {p_token:S.token, p_batch:b.id, p_accepted:st.a, p_rework:st.r, p_rejected:st.x, p_fault:st.fault, p_reason:st.reason}, t('qc_saved'))
-      .then(function(r){ if (r && r.ok !== false) delete S.ui['qc' + b.id]; });
+    x.disabled = true;
+    rpc('portal_admin_inspect', {p_token:S.token, p_batch:b.id, p_accepted:st.a, p_rework:st.r, p_rejected:st.x, p_fault:st.fault, p_reason:st.reason}).then(function(r){
+      if (!r || r.ok === false) { x.disabled = false; toast(errText(r || {}), true); return; }
+      var dp = (st.r + st.x > 0) ? (st.dp || []) : [];
+      return uploadPhotos(b.id, 'брак', dp).then(function(){ delete S.ui['qc' + b.id]; toast(t('qc_saved')); return load(); });
+    }).catch(function(){ x.disabled = false; toast(t('net'), true); });
   });
   sv.style.marginTop = '12px'; c.appendChild(sv);
   return c;
@@ -899,8 +1125,9 @@ var DEMO = (function(){
   var M = [{id:1, name:'Айгерім', employment:'трудовой договор (надомный)', trained_products:['SHEEP','TAQIYA'], accepted:23, to_pay:31800, defect_pct:4.2, wool_g:1500, open_tasks:1},
            {id:2, name:'Гүлнар', employment:'трудовой договор (надомный)', trained_products:['BAYPAQ'], accepted:6, to_pay:24000, defect_pct:0, wool_g:700, open_tasks:1},
            {id:3, name:'Сәуле', employment:'стажёр', trained_products:['SHEEP'], accepted:9, to_pay:8800, defect_pct:12.5, wool_g:400, open_tasks:1}];
-  var pending = [{id:101, master:'Айгерім', product_code:'TAQIYA', size:'56', qty:3, note:'', at:'07.11 10:20'}, {id:102, master:'Сәуле', product_code:'SHEEP', size:'', qty:5, note:'', at:'07.11 11:05'}];
-  var tasks = [{id:1, master:'Айгерім', product_code:'TAQIYA', size:'56', qty:10, done_qty:6, due:'14.11', status:'в работе'}, {id:2, master:'Гүлнар', product_code:'BAYPAQ', size:'38', qty:8, done_qty:6, due:'20.11', status:'в работе'}, {id:3, master:'Сәуле', product_code:'SHEEP', qty:30, done_qty:9, due:'21.11', status:'в работе'}];
+  var pending = [{id:101, master:'Айгерім', product_code:'TAQIYA', size:'56', qty:3, note:'', at:'07.11 10:20', photos:0}, {id:102, master:'Сәуле', product_code:'SHEEP', size:'', qty:5, note:'', at:'07.11 11:05', photos:0}];
+  var ashift = {open:false, since:null, open_min:0, today_min:0, month_days:5, month_hours:22}; var mgrMode = false;
+  var tasks = [{id:1, group_id:7, master:'Айгерім', product_code:'TAQIYA', size:'56', qty:10, done_qty:6, due:'14.11', status:'в работе', comment:'Наурызға: ақ және сұр түс, ою — қошқар мүйіз'}, {id:4, group_id:7, master:'Айгерім', product_code:'BAYPAQ', size:'24', qty:4, done_qty:0, due:'14.11', status:'назначено', comment:'Наурызға: ақ және сұр түс, ою — қошқар мүйіз'}, {id:2, group_id:-2, master:'Гүлнар', product_code:'BAYPAQ', size:'38', qty:8, done_qty:6, due:'20.11', status:'в работе', comment:''}, {id:3, group_id:-3, master:'Сәуле', product_code:'SHEEP', size:'', qty:30, done_qty:9, due:'21.11', status:'в работе', comment:''}];
   var payroll = [
     {agent:'Торговый представитель', title:'Магазины, опт, тендеры', level:2, level_name:'специалист', base:130000, bonuses:21000, penalties:3000, total:148000, pct:114, verdict:'норма', runs_ok:6, runs_bad:0, last_run:'07.11 12:41'},
     {agent:'Агент продаж', title:'Сообщения, скрипты, звонки', level:1, level_name:'стажёр', base:100000, bonuses:8000, penalties:6000, total:102000, pct:102, verdict:'норма', runs_ok:5, runs_bad:0, last_run:'07.11 10:06'},
@@ -913,16 +1140,21 @@ var DEMO = (function(){
     docs:[{id:7, doc_type:'договор', title:'Трудовой договор о надомной работе', status:'проверить бухгалтеру', url:''}],
     events:[{d:'2026-11-17', e:'', title:'Тест кандидаток', kind:'производство', note:''}],
     users:[{id:1, role:'manager', name:'Ернарби', phone:'77781773967', active:true, last_login:'07.11 12:30'}, {id:2, role:'admin', name:'Әсел', phone:'77000000000', active:true, last_login:''}]};
-  function admin(){ return {name:'Әсел', pending:pending, masters:M, tasks:tasks, wool_stock:[{item:'Шерсть для тақия и байпақ', unit:'г', qty:2400}, {item:'Шерсть меринос для овечек', unit:'г', qty:900}], wool_recent:[{master:'Айгерім', kind:'жүн', grams:600, d:'05.11'}], checked_today:4, sizes:SZ, stock_sizes:[{product_code:'TAQIYA', size:'48', age_group:'детский', available:4}, {product_code:'TAQIYA', size:'56', age_group:'взрослый', available:6}, {product_code:'BAYPAQ', size:'38', age_group:'взрослый', available:5}], stock_nosize:[{product_code:'SHEEP', available:11}]}; }
+  function admin(){ return {name:'Әсел', shift:mgrMode ? null : ashift, attendance:[{name:'Айгерім', role:'master', on_shift:true, since:'09:05', today_min:185, month_days:6, month_hours:31.5}, {name:'Сәуле', role:'master', on_shift:false, since:null, today_min:0, month_days:4, month_hours:18}], pending:pending, masters:M, tasks:tasks, wool_stock:[{item:'Шерсть для тақия и байпақ', unit:'г', qty:2400}, {item:'Шерсть меринос для овечек', unit:'г', qty:900}], wool_recent:[{master:'Айгерім', kind:'жүн', grams:600, d:'05.11'}], checked_today:4, sizes:SZ, stock_sizes:[{product_code:'TAQIYA', size:'48', age_group:'детский', available:4}, {product_code:'TAQIYA', size:'56', age_group:'взрослый', available:6}, {product_code:'BAYPAQ', size:'38', age_group:'взрослый', available:5}], stock_nosize:[{product_code:'SHEEP', available:11}]}; }
   var master = {name:'Айгерім', pay:{accepted:23, rework:1, rejected_master_fault:1, rejected_not_master_fault:0, accrued:31800, deduction:0, to_pay:31800, defect_pct:4.2},
-    tasks:[{id:1, product_code:'TAQIYA', size:'56', qty:10, done_qty:6, due:'14.11', status:'в работе'}], pending:[{id:101, product_code:'TAQIYA', size:'56', qty:3, at:'07.11 10:20'}], sizes:SZ,
+    tasks:[{id:1, group_id:7, product_code:'TAQIYA', size:'56', qty:10, done_qty:6, due:'14.11', status:'в работе', comment:'Наурызға: ақ және сұр түс, ою — қошқар мүйіз'}, {id:4, group_id:7, product_code:'BAYPAQ', size:'24', qty:4, done_qty:0, due:'14.11', status:'назначено', comment:'Наурызға: ақ және сұр түс, ою — қошқар мүйіз'}], pending:[{id:101, product_code:'TAQIYA', size:'56', qty:3, at:'07.11 10:20', photos:2}], sizes:SZ, shift:{open:false, since:null, open_min:0, today_min:0, month_days:6, month_hours:31.5},
     checked:[{product_code:'SHEEP', size:'', qty:12, accepted:11, rework:0, rejected:1, fault:'мастер', reason:'бүйірінде тесік бар', d:'05.11'}, {product_code:'TAQIYA', size:'48', qty:6, accepted:6, rework:0, rejected:0, fault:'не определено', reason:'', d:'04.11'}],
     wool:[{kind:'жүн', grams:600, d:'05.11', note:''}, {kind:'меринос', grams:300, d:'01.11', note:''}],
     rates:[{product_code:'SHEEP', rate:1100}, {product_code:'TAQIYA', rate:2500}, {product_code:'BAYPAQ', rate:4000}]};
   function rpc(fn, a){
-    if (fn === 'portal_master_home' || fn === 'portal_master_view') return master;
+    if (fn === 'portal_master_home') return master;
+    if (fn === 'portal_master_view') { var mv = JSON.parse(JSON.stringify(master)); delete mv.shift; return mv; }
+    if (fn === 'portal_shift_start') { master.shift = {open:true, since:'10:40', open_min:0, today_min:0, month_days:7, month_hours:31.5}; ashift = {open:true, since:'10:40', open_min:0, today_min:0, month_days:6, month_hours:22}; return {ok:true}; }
+    if (fn === 'portal_shift_end') { master.shift.open = false; ashift.open = false; return {ok:true}; }
+    if (fn === 'portal_photos') return [];
+    if (fn === 'portal_master_submit') { master.pending.unshift({id:Date.now(), product_code:a.p_product, size:a.p_size || '', qty:a.p_qty, at:'сейчас', photos:0}); return {ok:true, batch_id:Date.now()}; }
     if (fn === 'portal_admin_home') return admin();
-    if (fn === 'portal_manager_home') { mgr.workshop = admin(); return mgr; }
+    if (fn === 'portal_manager_home') { mgrMode = true; mgr.workshop = admin(); mgrMode = false; return mgr; }
     if (fn === 'portal_master_submit') { master.pending.unshift({id:Date.now(), product_code:a.p_product, size:a.p_size || '', qty:a.p_qty, at:'сейчас'}); return {ok:true}; }
     if (fn === 'portal_master_cancel') { master.pending = master.pending.filter(function(x){ return x.id !== a.p_batch; }); return {ok:true}; }
     if (fn === 'portal_admin_inspect') { pending = pending.filter(function(x){ return x.id !== a.p_batch; }); return {ok:true}; }
