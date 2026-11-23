@@ -191,6 +191,9 @@ details.how[open] summary::before{content:"▾ "}
 .lightbox .nav button{min-height:48px;min-width:64px;border-radius:999px;border:0;background:#fff;color:#111;font-size:18px;font-weight:700;cursor:pointer}
 
 .tgroup{border-left:4px solid var(--gold)}
+.later{margin-top:22px}
+.later>summary{font-weight:600}
+.later .list{padding:0 10px 10px}
 .tgroup .line{display:flex;justify-content:space-between;gap:8px;margin-top:12px;font-weight:600}
 .tgroup .line span:last-child{color:var(--muted);font-weight:500;white-space:nowrap}
 .tgroup .bar-p{margin-top:6px}
@@ -1018,7 +1021,8 @@ function mgrToday(w, d){
     var acts = el('div', 'acts');
     if (a.link) { var lk = el('a', 'btn small', 'Открыть'); lk.href = a.link; lk.target = '_blank'; lk.rel = 'noopener'; acts.appendChild(lk); }
     acts.append(btn('Одобрить', 'small primary', function(x){ act(x, 'portal_approval', {p_token:S.token, p_id:a.id, p_decision:'одобрено'}, 'Одобрено · агенту +1 000'); }),
-                btn('Отклонить', 'small danger', function(x){ act(x, 'portal_approval', {p_token:S.token, p_id:a.id, p_decision:'отклонено'}, 'Отклонено · агенту −3 000'); }));
+                laterBtn(acts, 'portal_approval_postpone', a.id),
+                btn('Отклонить', 'small danger', function(x){ act(x, 'portal_approval', {p_token:S.token, p_id:a.id, p_decision:'отклонено'}, a.kind === 'канал' ? 'Отклонено' : 'Отклонено · агенту −3 000'); }));
     li.appendChild(acts); ul.appendChild(li); }); w.appendChild(ul); }
 
   w.appendChild(section('Мои дела', (d.tasks || []).length));
@@ -1028,8 +1032,38 @@ function mgrToday(w, d){
     li.append(top, el('div', 'title', x.title));
     if (x.how) { var det = el('details', 'how'); det.appendChild(el('summary', '', 'Как сделать — пошагово')); det.appendChild(el('div', 'how-body', x.how));
       if (x.done_when) det.appendChild(el('div', 'how-body note', 'Готово, когда: ' + x.done_when)); li.appendChild(det); }
-    var acts = el('div', 'acts'); acts.appendChild(btn('Сделано', 'small primary', function(b){ act(b, 'portal_task_done', {p_token:S.token, p_id:x.id}, 'Отмечено'); }));
+    var acts = el('div', 'acts'); acts.append(btn('Сделано', 'small primary', function(b){ act(b, 'portal_task_done', {p_token:S.token, p_id:x.id}, 'Отмечено'); }),
+      laterBtn(acts, 'portal_task_postpone', x.id));
     li.appendChild(acts); tl.appendChild(li); }); w.appendChild(tl); }
+  postponedBlock(w, d.postponed || {});
+}
+/* «На потом»: one tap opens the choice, a second tap postpones; nothing is rejected, no penalty */
+function laterBtn(acts, fn, id){
+  return btn('На потом', 'small', function(){
+    var saved = Array.prototype.slice.call(acts.childNodes);
+    acts.innerHTML = ''; var lb = el('div', 'note', 'Когда вернуть в список?'); lb.style.width = '100%'; acts.appendChild(lb);
+    [['Завтра', 1, 'до завтра'], ['Через неделю', 7, 'на неделю'], ['Без срока', 0, 'без срока']].forEach(function(o){
+      acts.appendChild(btn(o[0], 'small primary', function(b){ act(b, fn, {p_token:S.token, p_id:id, p_days:o[1]}, 'Отложено ' + o[2] + ' · штрафа нет'); }));
+    });
+    acts.appendChild(btn('Отмена', 'small', function(){ acts.innerHTML = ''; saved.forEach(function(n){ acts.appendChild(n); }); }));
+  });
+}
+function postponedBlock(w, p){
+  var ts = p.tasks || [], as = p.approvals || [], n = ts.length + as.length;
+  if (!n) return;
+  var det = el('details', 'how later'); det.appendChild(el('summary', '', 'Отложено на потом · ' + n));
+  var ul = el('ul', 'list');
+  function row(kind, title, sub, until, fn, id, how){
+    var li = el('li', 'item'); var top = el('div', 'top');
+    top.append(el('span', 'pill', kind), el('span', '', until ? 'вернётся ' + until : 'без срока'));
+    li.append(top, el('div', 'title', title)); if (sub) li.appendChild(el('div', 'sub', sub));
+    if (how) { var dd = el('details', 'how'); dd.appendChild(el('summary', '', 'Подробнее')); dd.appendChild(el('div', 'how-body', how)); li.appendChild(dd); }
+    var a = el('div', 'acts'); a.appendChild(btn('Вернуть сейчас', 'small primary', function(b){ act(b, fn, {p_token:S.token, p_id:id}, 'Вернули в список'); }));
+    li.appendChild(a); ul.appendChild(li);
+  }
+  ts.forEach(function(x){ row(x.kind, x.title, 'Дело · ' + x.created_by, x.until, 'portal_task_reopen', x.id, x.how); });
+  as.forEach(function(x){ row(x.kind, x.title, 'На решение · №' + x.id + ' · ' + x.requested_by, x.until, 'portal_approval_reopen', x.id, x.summary); });
+  det.appendChild(ul); w.appendChild(det);
 }
 
 
@@ -1454,6 +1488,8 @@ var DEMO = (function(){
     if (fn === 'portal_admin_inspect') { pending = pending.filter(function(x){ return x.id !== a.p_batch; }); return {ok:true}; }
     if (fn === 'portal_approval') { mgr.approvals = mgr.approvals.filter(function(x){ return x.id !== a.p_id; }); return {ok:true}; }
     if (fn === 'portal_task_done') { mgr.tasks = mgr.tasks.filter(function(x){ return x.id !== a.p_id; }); return {ok:true}; }
+    if (fn === 'portal_task_postpone' || fn === 'portal_approval_postpone') { var isT = fn === 'portal_task_postpone', src = isT ? mgr.tasks : mgr.approvals, it = src.filter(function(x){ return x.id === a.p_id; })[0]; if (!it) return {ok:false}; mgr.postponed = mgr.postponed || {tasks:[], approvals:[]}; it.until = a.p_days ? (a.p_days === 1 ? 'завтра' : 'через неделю') : ''; (isT ? mgr.postponed.tasks : mgr.postponed.approvals).unshift(it); if (isT) mgr.tasks = src.filter(function(x){ return x !== it; }); else mgr.approvals = src.filter(function(x){ return x !== it; }); return {ok:true}; }
+    if (fn === 'portal_task_reopen' || fn === 'portal_approval_reopen') { var isT2 = fn === 'portal_task_reopen', pl = mgr.postponed || {tasks:[], approvals:[]}, lst = isT2 ? pl.tasks : pl.approvals, it2 = lst.filter(function(x){ return x.id === a.p_id; })[0]; if (!it2) return {ok:false}; if (isT2) { pl.tasks = lst.filter(function(x){ return x !== it2; }); mgr.tasks.push(it2); } else { pl.approvals = lst.filter(function(x){ return x !== it2; }); mgr.approvals.push(it2); } return {ok:true}; }
     if (fn === 'portal_agent_rate') { mgr.reviews.unshift({agent:a.p_agent, kind:a.p_kind, amount:a.p_amount, reason:a.p_reason, source:'Ернарби', at:'сейчас'}); return {ok:true}; }
     return {ok:true};
   }
