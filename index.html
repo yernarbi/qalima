@@ -1009,11 +1009,12 @@ function mgrToday(w, d){
   w.appendChild(kp);
 
   w.appendChild(section('Ждёт вашего решения', (d.approvals || []).length));
+  if (Number(d.deferred)) w.appendChild(el('p', 'note', 'Отложено ' + d.deferred + ' однотипных писем компаниям — они не потеряны; вернуть их можно поручением агенту.'));
   if (!(d.approvals || []).length) w.appendChild(empty('Очередь пуста.'));
   else { var ul = el('ul', 'list'); d.approvals.forEach(function(a){
     var li = el('li', 'item'); var top = el('div', 'top'); top.append(el('span', 'pill gold', a.kind), el('span', '', '№' + a.id + ' · ' + a.requested_by + ' · ' + a.created));
     li.append(top, el('div', 'title', a.title));
-    if (a.summary) { var det = el('details', 'how'); det.appendChild(el('summary', '', 'Подробнее')); det.appendChild(el('div', 'how-body', a.summary)); li.appendChild(det); }
+    if (a.summary) { var det = el('details', 'how'); if (a.kind === 'канал') { det.open = true; li.classList.add('tgroup'); } det.appendChild(el('summary', '', a.kind === 'канал' ? 'Вариант сбыта — прочитайте и решите' : 'Подробнее')); det.appendChild(el('div', 'how-body', a.summary)); li.appendChild(det); }
     var acts = el('div', 'acts');
     if (a.link) { var lk = el('a', 'btn small', 'Открыть'); lk.href = a.link; lk.target = '_blank'; lk.rel = 'noopener'; acts.appendChild(lk); }
     acts.append(btn('Одобрить', 'small primary', function(x){ act(x, 'portal_approval', {p_token:S.token, p_id:a.id, p_decision:'одобрено'}, 'Одобрено · агенту +1 000'); }),
